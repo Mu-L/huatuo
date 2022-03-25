@@ -87,7 +87,7 @@ public class LoadDll : MonoBehaviour
   - 发布选项设置
     - Scripting Backend 选择 il2cpp backend
     - 取消 use incremental GC
-  - 发布 (Windows平台注意切换成64位)
+  - 发布 (必须选择相应平台64位版本)
   - 进入场景后，应该能看到日志 "hello,huatuo"
 
 - 测试热更新

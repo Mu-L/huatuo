@@ -122,7 +122,7 @@ namespace metadata
         ass->image = image2;
 
         image->BuildIl2CppImage(image2);
-        image2->name = concatNewString(ass->aname.name, ".dll");
+        image2->name = ConcatNewString(ass->aname.name, ".dll");
         image2->nameNoExt = ass->aname.name;
         image2->assembly = ass;
 

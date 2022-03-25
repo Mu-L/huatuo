@@ -16,9 +16,9 @@ namespace huatuo
 
     const char* GetAssemblyNameFromPath(const char* assPath);
 
-    const char* copyString(const char* src);
+    const char* CopyString(const char* src);
 
-    const char* concatNewString(const char* s1, const char* s2);
+    const char* ConcatNewString(const char* s1, const char* s2);
 
 	struct CStringHash
 	{

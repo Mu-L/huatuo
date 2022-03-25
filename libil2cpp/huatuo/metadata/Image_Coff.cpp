@@ -36,6 +36,11 @@ namespace metadata
 		return false;
 	}
 
+	const int kOptionalHeaderSize32 = 224;
+	const int kOptionalHeaderSize64 = 240;
+	const int kCliHeaderOffset32 = 208;
+	const int kCliHeaderOffset64 = 224;
+
 	LoadImageErrorCode Image::Load(const byte* imageData, size_t length)
 	{
 		_ptrRawData = imageData;
@@ -62,17 +67,19 @@ namespace metadata
 		_isDll = (_PEHeader->characteristics & 0x2000);
 		std::cout << "load " << (_isDll ? "dll" : "exe") << std::endl;
 
-		if (_PEHeader->optionalHeadersize != 224)
+		// optional size may be 224(32bit matchine) or 240 (64bit)
+		if (_PEHeader->optionalHeadersize != kOptionalHeaderSize32 && _PEHeader->optionalHeadersize != kOptionalHeaderSize64)
 		{
 			return LoadImageErrorCode::BAD_IMAGE;
 		}
+		bool is32BitFormat = _PEHeader->optionalHeadersize == kOptionalHeaderSize32;
 
 		const PEDirEntry* ptrCLIHeaderEntry = (PEDirEntry*)(((byte*)_PEHeader)
 			+ 20 /* pe header size */
-			+ 208 /* pe optional header -> pe header data directories -> cli header */);
+			+ (is32BitFormat ? kCliHeaderOffset32 : kCliHeaderOffset64) /* pe optional header -> pe header data directories -> cli header */);
 
 
-		_PESectionHeaders = (PESectionHeader*)((byte*)_PEHeader + 20 + 224);
+		_PESectionHeaders = (PESectionHeader*)((byte*)_PEHeader + 20 + _PEHeader->optionalHeadersize);
 
 		uint32_t cLIHeaderOffset;
 		if (!TranslateRVAToImageOffset(ptrCLIHeaderEntry->rva, cLIHeaderOffset))

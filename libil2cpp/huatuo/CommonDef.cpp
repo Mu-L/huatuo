@@ -25,7 +25,7 @@ namespace huatuo
         return last ? last : assPath;
     }
 
-    const char* copyString(const char* src)
+    const char* CopyString(const char* src)
     {
         size_t len = std::strlen(src);
         char* dst = (char*)IL2CPP_MALLOC(len + 1);
@@ -33,7 +33,7 @@ namespace huatuo
         return dst;
     }
 
-    const char* concatNewString(const char* s1, const char* s2)
+    const char* ConcatNewString(const char* s1, const char* s2)
     {
         size_t len1 = std::strlen(s1);
         size_t len = len1 + std::strlen(s2);

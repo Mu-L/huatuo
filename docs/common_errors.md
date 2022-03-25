@@ -16,6 +16,10 @@
   1. 确定已经将了huatuo代码中的 libil2cpp 目录替换了对应的Editor 中的 libil2cpp 目录
   2. 删除Unity工程中的Library目录，重新构建即可
 
+## Assembly.Load(byte[]) 出错: NotSupportedException
+
+原因是你的huatuo太旧，未实现Load(byte[])这个函数。 拉最新的huatuo，替换你的libil2cpp，重新打包就行了
+
 ## 更新huatuo代码（替换libil2cpp）后发现更新未生效
 这是由于之前使用过旧代码编译导致的，Library 是旧的。只要删掉Library在重新打包就可以了
 

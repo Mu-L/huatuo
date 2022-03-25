@@ -43,6 +43,7 @@ huatuo从mono的[Hybrid mode execution](https://developpaper.com/new-net-interpr
 - [FAQ](docs/FAQ.md)
 - [常见错误](docs/common_errors.md)
 - [最佳实践](docs/best_practices.md)
+- [源码结构与跟踪调试](docs/source_inspect.md)
 - [示例项目](https://github.com/focus-creative-games/huatuo_trial)
 - [知乎专栏](https://www.zhihu.com/column/c_1489549396035870720)
 - [==>致谢名单<==](docs/donate.md)
@@ -69,9 +70,9 @@ huatuo从mono的[Hybrid mode execution](https://developpaper.com/new-net-interpr
 - 暂时不支持返回**自定义值类型**的async task。原生值类型如int及枚举及class类型不受限制，原因同上。这个限制后续版本会解决。
 - **注意使用link.xml或者代码引用的方式避免unity裁减代码。避免开发期能调用，发布后却找不到函数的错误**。我们后续会提供默认模板。
 - 不支持delegate的BeginInvoke, EndInvoke。纯粹是觉得没必要实现。
-- 由于Unity资源管理机制的限制（脚本uuid在打包时已确定，找不到热更新脚本对应的GUID），热更新的MonoBehaviour挂在scene或prefab中无法成功反序列化。但可以通过代码 go.AddComponent的方式挂载。通过一些自定义的script proxy加载的方式也是可以的。期望unity官方或者第三方出一个便利一些的解决方案。
+- 由于Unity资源管理机制的限制（脚本uuid在打包时已确定，找不到热更新脚本对应的GUID），热更新的MonoBehaviour需要编译成独立dll的形式，挂载到资源上，才能正确反序列化
 - 暂不支持增量式gc。由于时间紧凑，来不及仔细处理增量式gc的memory barrier细节。这个问题很快会解决。
-- 暂时不支持调试。但能打印错误堆栈（只能精确到函数）。
+- 暂时不支持c#源码调试，但能打印错误堆栈（只能精确到函数），也可以在Build出的Debug工程中跟踪调试。
 
 ## RoadMap
 
