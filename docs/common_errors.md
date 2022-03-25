@@ -16,3 +16,8 @@
   1. 确定已经将了huatuo代码中的 libil2cpp 目录替换了对应的Editor 中的 libil2cpp 目录
   2. 删除Unity工程中的Library目录，重新构建即可
 
+## 打包生成Visual Studio Project后，编译出现错误找不到Windows SDK版本或无法打开.....\binUnityPlayerStub.lib
+  打包生成的C++工程中，依赖关系为：项目主工程（同unity项目名，当前启动项目）依赖Il2CppOutputProject，Il2CppOutputProject依赖UnityPlayerStub。但是生成的工程设置中并没有设置依赖，一般按照下面的设置就能解决：
+  1. 编译UnityPlayerStub项目，遇到问题就修改项目设置里面的 Windows SDK Version 和 Platform Toolset
+  2. 编译Il2CppOutputProject 项目
+  3. 启动成功
