@@ -67,7 +67,7 @@ huatuo从mono的[Hybrid mode execution](https://developpaper.com/new-net-interpr
 
 - 目前仅支持 2020.3.7和3.9版本，相应的中国特供版也可以。 五月份后会支持 2018-2022 全系列版本。
 - 无法创建出普通AOT泛型(**delegate、Nullable、数组(包括多维)不受限制，热更新泛型也完全不受限**)的**热更新非枚举值类型**的实例化类型的实例。 例如不支持List&lt;HotUpdateValueType&gt;但支持List&lt;int&gt;、List&lt;HotUpdateClass&gt;和List&lt;HotUpdateEnum&gt;。 具体原因见[AOT泛型限制及原理介绍](docs/generic_limit.md)。这个后续版本会基本解决。
-- 暂时不支持返回**自定义值类型**的async task。原生值类型如int及枚举及class类型不受限制，原因同上。这个限制后续版本会解决。
+- 暂时不支持返回**自定义值类型**的默认async task，原生值类型如int及枚举及class类型不受限制。原因是编译器会为async默认生成 AsyncTaskMethodBuilder&lt;T&gt;的泛型类实例化，如果像ETask那样使用自定义Task及AsyncTaskMethodBuilder，则不受限制。原生async这个限制后续版本会解决。
 - **注意使用link.xml或者代码引用的方式避免unity裁减代码。避免开发期能调用，发布后却找不到函数的错误**。我们后续会提供默认模板。
 - 不支持delegate的BeginInvoke, EndInvoke。纯粹是觉得没必要实现。
 - 由于Unity资源管理机制的限制（脚本uuid在打包时已确定，找不到热更新脚本对应的GUID），热更新的MonoBehaviour需要编译成独立dll的形式，挂载到资源上，才能正确反序列化
@@ -82,9 +82,9 @@ huatuo虽然与il2cpp相关，但绝大多数核心代码独立于il2cpp，很�
 - 指令优化，编译后指令数减少到原来1/4-1/2，基础指令和大多数对象模型指令有100%-300%的性能提升。 (2022.5 出预览版本)
 - 支持unity 2018以后的全系列版本 (2022.5)
 - 支持 hotfix AOT部分的bug (2022.6)
-- 除去大多数普通AOT泛型类限制 (2022.7)
-- 支持 extern函数 (2022.8)
-- 支持增量式gc。 (2022.10)
+- 除去大多数普通AOT泛型类限制 (2022.6)
+- 支持增量式gc。 (2022.6)
+- 支持 extern函数 (2022.7)
 - 其他内存和效率优化，以及代码重构
 - **===支持godot引擎===**(2022.12)
 
