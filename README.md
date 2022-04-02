@@ -56,7 +56,7 @@ huatuo从mono的[Hybrid mode execution](https://developpaper.com/new-net-interpr
 - 几乎实现了所有规范要求的特性。除了AOT泛型这种无法通用解决的除外
 - 完成了绝大多数指令的单元测试。只有calli、initblk等少数难以或者无法构造的指令未添加对应的单元测试。
 - 对照c#规范完成各项语法测试。
-- 可以高效地加载 [luban](https://github.com/focus-creative-games/luban)配置
+- 可以高效地加载 [luban](https://github.com/focus-creative-games/luban) 配置
 - 可以正常地纯解释器地运行[2048](https://github.com/dgkanatsios/2048)这样的不太复杂的游戏
 
 我们团队正全力进行huatuo的测试和修复工作，**预计在2022.4(没错，下个月)能顺利运行一个大型的游戏项目**。
@@ -72,7 +72,7 @@ huatuo从mono的[Hybrid mode execution](https://developpaper.com/new-net-interpr
 - 不支持delegate的BeginInvoke, EndInvoke。纯粹是觉得没必要实现。
 - 由于Unity资源管理机制的限制（脚本uuid在打包时已确定，找不到热更新脚本对应的GUID），热更新的MonoBehaviour需要编译成独立dll的形式，挂载到资源上，才能正确反序列化
 - 暂不支持增量式gc。由于时间紧凑，来不及仔细处理增量式gc的memory barrier细节。这个问题很快会解决。
-- 暂时不支持c#源码调试，但能打印错误堆栈（只能精确到函数），也可以在Build出的Debug工程中跟踪调试。
+- 暂时不支持打包后真机的c#源码调试，但能打印错误堆栈（只能精确到函数），也可以在Build出的Debug工程中跟踪调试。Editor下开发期调试使用平时的mono调试就可以了。
 
 ## RoadMap
 
@@ -80,7 +80,7 @@ huatuo虽然与il2cpp相关，但绝大多数核心代码独立于il2cpp，很�
 
 - 持续修复bug，让一个中大型游戏正常运行 (2022.4)
 - 指令优化，编译后指令数减少到原来1/4-1/2，基础指令和大多数对象模型指令有100%-300%的性能提升。 (2022.5 出预览版本)
-- 支持unity 2018以后的全系列版本 (2022.5)
+- 支持unity 2018以后的全系列版本 (2022.5)。查看[现在支持的Unity版本](docs/support_versions.md)
 - 支持 hotfix AOT部分的bug (2022.6)
 - 除去大多数普通AOT泛型类限制 (2022.6)
 - 支持增量式gc。 (2022.6)
