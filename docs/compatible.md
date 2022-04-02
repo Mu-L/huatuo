@@ -7,7 +7,7 @@
 
 ## json库
 
-由于常用的json库较多，json的兼容性测试单独给一个[json测试报告](compatible_json)
+由于常用的json库较多，json的兼容性测试单独给一个[json测试报告](compatible_json.md)
 
 - [NewtonsoftJson](https://github.com/jilleJr/Newtonsoft.Json-for-Unity) 兼容性佳，与原生使用注意事项相同，需要使用AotHelper提前确保使用
 - [CatJson](https://github.com/CatImmortal/CatJson) 兼容性极佳，只要不违背AOT限制就能工作。 **最佳推荐**
