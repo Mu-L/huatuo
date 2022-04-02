@@ -41,9 +41,13 @@
 #include <algorithm>
 #include <limits>
 
-// === huatuo
+// ==={{ huatuo
+#include <set>
 #include "huatuo/metadata/MetadataUtil.h"
-// === huatuo
+#include "huatuo/interpreter/Engine.h"
+#include "huatuo/interpreter/Interpreter.h"
+#include "huatuo/interpreter/InterpreterModule.h"
+// ===}} huatuo
 
 namespace il2cpp
 {
@@ -2170,6 +2174,29 @@ namespace vm
             }
 
             klass = Image::FromTypeNameParseInfo(image, info, searchFlags & kTypeSearchFlagIgnoreCase);
+            // ==={{ huatuo
+            if (klass == nullptr)
+            {
+                huatuo::interpreter::MachineState& state = huatuo::interpreter::InterpreterModule::GetCurrentThreadMachineState();
+                const huatuo::interpreter::InterpFrame* frame = state.GetTopFrame();
+                if (frame)
+                {
+                    const Il2CppImage* interpImage = frame->method->method->klass->image;
+                    if (interpImage != image)
+                    {
+                        klass = Image::FromTypeNameParseInfo(interpImage, info, searchFlags & kTypeSearchFlagIgnoreCase);
+                    }
+                }
+                if (!klass)
+                {
+                    const  Il2CppImage* interpImage = state.GetTopExecutingImage();
+                    if (interpImage)
+                    {
+                        klass = Image::FromTypeNameParseInfo(interpImage, info, searchFlags & kTypeSearchFlagIgnoreCase);
+                    }
+                }
+            }
+            // ===}} huatuo
             if (klass == NULL && image != Image::GetCorlib())
             {
                 // Try mscorlib

@@ -13,7 +13,6 @@ namespace metadata
     class MetadataParser
     {
     public:
-        static uint32_t ReadEncodedLength(const byte* buf, uint32_t& lengthSize);
         static BlobReader DecodeBlob(Image& image, const byte* buf);
 
         // misc

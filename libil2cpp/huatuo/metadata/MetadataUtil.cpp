@@ -91,8 +91,9 @@ namespace metadata
 		}
 		default:
 		{
-			IL2CPP_ASSERT(false);
-			return 8;
+			TEMP_FORMAT(errMsg, "GetTypeValueSize unknown type:%d", (int)type->type);
+			RaiseExecuteEngineException(errMsg);
+			return -1;
 		}
 		}
 
@@ -313,67 +314,19 @@ namespace metadata
 		return true;
 	}
 
-
-
 	bool IsOverrideMethod(const Il2CppType* type1, const Il2CppMethodDefinition* methodDef1, const Il2CppType* type2, const Il2CppMethodDefinition* methodDef2)
 	{
-		if (std::strcmp(il2cpp::vm::GlobalMetadata::GetStringFromIndex(methodDef1->nameIndex), il2cpp::vm::GlobalMetadata::GetStringFromIndex(methodDef2->nameIndex)))
+		const char* name1 = il2cpp::vm::GlobalMetadata::GetStringFromIndex(methodDef1->nameIndex);
+		const char* name2 = il2cpp::vm::GlobalMetadata::GetStringFromIndex(methodDef2->nameIndex);
+		if (std::strcmp(name1, name2))
 		{
 			return false;
 		}
 		return IsOverrideMethodIgnoreName(type1, methodDef1, type2, methodDef2);
 	}
 
-	//bool IsMatchMethodSig(const Il2CppMethodDefinition* methodDef, const MethodRefSig& resolveSig)
-	//{
-	//    if (methodDef->parameterCount != (uint16_t)resolveSig.params.size())
-	//    {
-	//        return false;
-	//    }
-
-	//    const Il2CppType* returnType1 = &resolveSig.returnType;
-	//    const Il2CppType* returnType2 = il2cpp::vm::GlobalMetadata::GetIl2CppTypeFromIndex(methodDef->returnType);
-
-
-	//    if (!il2cpp::metadata::Il2CppTypeEqualityComparer::AreEqual(returnType1, returnType2))
-	//    {
-	//        return false;
-	//    }
-
-	//    for (uint32_t i = 0; i < methodDef->parameterCount; i++)
-	//    {
-	//        const Il2CppType* paramType1 = &resolveSig.params[i];
-	//        const Il2CppParameterDefinition* dstParam = (const Il2CppParameterDefinition*)il2cpp::vm::GlobalMetadata::GetParameterDefinitionFromIndex(methodDef, methodDef->parameterStart + i);
-	//        IL2CPP_ASSERT(dstParam);
-	//        const Il2CppType* paramType2 = il2cpp::vm::GlobalMetadata::GetIl2CppTypeFromIndex(dstParam->typeIndex);
-
-	//        if (!il2cpp::metadata::Il2CppTypeEqualityComparer::AreEqual(paramType1, paramType2))
-	//        {
-	//            return false;
-	//        }
-	//    }
-	//    return true;
-	//}
-
-
 	bool IsMatchSigType(const Il2CppType* dstType, const Il2CppType* sigType, const Il2CppGenericContainer* klassGenericContainer, const Il2CppGenericContainer* methodGenericContainer)
 	{
-		// the method type in resolve sig isn't resolve to runtime metadata
-
-		//if (paramType1->type == IL2CPP_TYPE_MVAR)
-		//{
-		//    if (!methodGenericContainer)
-		//    {
-		//        return false;
-		//    }
-		//    IL2CPP_ASSERT(paramType1->data.__genericParameterIndex < methodGenericContainer->type_argc);
-		//    tempType = *paramType1;
-		//    tempType.data.genericParameterHandle = (Il2CppMetadataGenericParameterHandle)il2cpp::vm::GlobalMetadata::GetGenericParameterFromIndex
-		//    ((Il2CppMetadataGenericContainerHandle)methodGenericContainer, paramType1->data.__genericParameterIndex);
-		//    paramType1 = &tempType;
-		//}
-
-
 		if (dstType->type != sigType->type)
 		{
 			return false;
@@ -454,29 +407,7 @@ namespace metadata
 		{
 			return false;
 		}
-		//const Il2CppGenericContainer* methodGenericContainer = (Il2CppGenericContainer*)il2cpp::vm::GlobalMetadata::GetGenericContainerFromIndex(methodDef->genericContainerIndex);
 		Il2CppGenericContainer* methodGenericContainer = nullptr;
-		// if generic param not match. return false
-		//if (methodDef->genericContainerIndex == kGenericContainerIndexInvalid)
-		//{
-		//	if (genericArgCount != 0)
-		//	{
-		//		return false;
-		//	}
-		//}
-		//else
-		//{
-		//	if (genericArgCount == 0)
-		//	{
-		//		return false;
-		//	}
-		//	methodGenericContainer = (Il2CppGenericContainer*)il2cpp::vm::GlobalMetadata::GetGenericContainerFromIndex(methodDef->genericContainerIndex);
-		//	if (genericArgCount != methodGenericContainer->type_argc)
-		//	{
-		//		return false;
-		//	}
-		//}
-
 		const Il2CppType* returnType1 = &resolveSig.returnType;
 		const Il2CppType* returnType2 = methodDef->return_type;
 		if (!IsMatchSigType(returnType2, returnType1, klassGenericContainer, methodGenericContainer))
@@ -487,7 +418,6 @@ namespace metadata
 		{
 			const Il2CppType* paramType1 = &resolveSig.params[i];
 			const Il2CppType* paramType2 = methodDef->parameters[i].parameter_type;
-
 			if (!IsMatchSigType(paramType2, paramType1, klassGenericContainer, methodGenericContainer))
 			{
 				return false;
@@ -502,7 +432,6 @@ namespace metadata
 		{
 			return false;
 		}
-		//const Il2CppGenericContainer* methodGenericContainer = (Il2CppGenericContainer*)il2cpp::vm::GlobalMetadata::GetGenericContainerFromIndex(methodDef->genericContainerIndex);
 		Il2CppGenericContainer* methodGenericContainer = nullptr;
 		// if generic param not match. return false
 		if (methodDef->genericContainerIndex == kGenericContainerIndexInvalid)
@@ -537,7 +466,6 @@ namespace metadata
 			const Il2CppParameterDefinition* dstParam = (const Il2CppParameterDefinition*)il2cpp::vm::GlobalMetadata::GetParameterDefinitionFromIndex(methodDef, methodDef->parameterStart + i);
 			IL2CPP_ASSERT(dstParam);
 			const Il2CppType* paramType2 = il2cpp::vm::GlobalMetadata::GetIl2CppTypeFromIndex(dstParam->typeIndex);
-
 			if (!IsMatchSigType(paramType2, paramType1, klassGenericContainer, methodGenericContainer))
 			{
 				return false;
@@ -559,9 +487,8 @@ namespace metadata
 			{
 				return methodDef;
 			}
-
 		}
-		IL2CPP_ASSERT(false);
+		RaiseMethodNotFindException(type, resolveMethodName);
 		return nullptr;
 	}
 
@@ -587,6 +514,7 @@ namespace metadata
 				}
 			}
 		}
+		RaiseMethodNotFindException(type, il2cpp::vm::GlobalMetadata::GetStringFromIndex(methodDef->nameIndex));
 		return nullptr;
 	}
 
@@ -622,6 +550,7 @@ namespace metadata
 				return cur;
 			}
 		}
+		RaiseMissingFieldException(&type, name);
 		return nullptr;
 	}
 

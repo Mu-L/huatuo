@@ -204,10 +204,11 @@ namespace metadata
 		{
 			return LoadImageErrorCode::BAD_IMAGE;
 		}
-		if (ptrTableHeader->sorted & ~validMask)
-		{
-			return LoadImageErrorCode::BAD_IMAGE;
-		}
+		// sorted include not exist table, so check is not need.
+		//if (ptrTableHeader->sorted & ~validMask)
+		//{
+		//	return LoadImageErrorCode::BAD_IMAGE;
+		//}
 
 		uint32_t validTableNum = GetNotZeroBitCount(ptrTableHeader->valid);
 		std::cout << "valid table num:" << validTableNum << std::endl;
@@ -347,7 +348,7 @@ namespace metadata
 		{
 			auto& table = _tableRowMetas[(int)TableType::DECLSECURITY];
 			table.push_back({ 2 });
-			table.push_back({ ComputTableIndexByte(TableType::TYPEDEF, TableType::METHODSPEC, TableType::ASSEMBLY, TagBits::HasDeclSecurity) });
+			table.push_back({ ComputTableIndexByte(TableType::TYPEDEF, TableType::METHOD, TableType::ASSEMBLY, TagBits::HasDeclSecurity) });
 			table.push_back({ ComputBlobIndexByte() });
 		}
 		{
@@ -574,7 +575,7 @@ namespace metadata
 			for (cur = _streamUS.data; cur < _streamUS.data + _streamUS.size;)
 			{
 				++usNum;
-				uint32_t stringLength = MetadataParser::ReadEncodedLength(cur, lengthSize);
+				uint32_t stringLength = BlobReader::ReadCompressedUint32(cur, lengthSize);
 				cur += lengthSize;
 				//std::cout << "#us.[" << usNum << "].size:" << stringLength << std::endl;
 				cur += stringLength;
@@ -596,7 +597,7 @@ namespace metadata
 			for (cur = _streamBlobHeap.data; cur < _streamBlobHeap.data + _streamBlobHeap.size;)
 			{
 				++blobNum;
-				uint32_t stringLength = MetadataParser::ReadEncodedLength(cur, lengthSize);
+				uint32_t stringLength = BlobReader::ReadCompressedUint32(cur, lengthSize);
 				cur += lengthSize;
 				//std::cout << "#blob.[" << blobNum << "].size:" << stringLength << std::endl;
 				cur += stringLength;
@@ -643,7 +644,7 @@ namespace metadata
 			+ ComputBlobIndexByte();
 		case TableType::FIELDMARSHAL: return ComputTableIndexByte(TableType::FIELD, TableType::PARAM, TagBits::HasFieldMarshal)
 			+ ComputBlobIndexByte();
-		case TableType::DECLSECURITY: return 2 + ComputTableIndexByte(TableType::TYPEDEF, TableType::METHODSPEC, TableType::ASSEMBLY, TagBits::HasDeclSecurity)
+		case TableType::DECLSECURITY: return 2 + ComputTableIndexByte(TableType::TYPEDEF, TableType::METHOD, TableType::ASSEMBLY, TagBits::HasDeclSecurity)
 			+ ComputBlobIndexByte();
 		case TableType::CLASSLAYOUT: return 2 + 4 + ComputTableIndexByte(TableType::TYPEDEF);
 		case TableType::FIELDLAYOUT: return 4 + ComputTableIndexByte(TableType::FIELD);

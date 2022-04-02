@@ -176,7 +176,6 @@ namespace metadata
 
     inline void GetIl2CppTypeFromTypeDefinition(const Il2CppTypeDefinition* typeDef, Il2CppType& type)
     {
-        type = {};
         type.type = typeDef->bitfield & (1 << (il2cpp::vm::kBitIsValueType - 1)) ? IL2CPP_TYPE_VALUETYPE : IL2CPP_TYPE_CLASS;
         type.data.typeHandle = (Il2CppMetadataTypeHandle)typeDef;
     }
@@ -264,6 +263,11 @@ namespace metadata
     inline void RaiseExecuteEngineException(const char* msg = nullptr)
     {
         il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetExecutionEngineException(msg));
+    }
+
+    inline void RaiseBadImageException(const char* msg = nullptr)
+    {
+        il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetBadImageFormatException(msg));
     }
 #pragma endregion
 

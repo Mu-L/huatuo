@@ -42,6 +42,13 @@ namespace huatuo
         strcpy(dst + len1, s2);
         return dst;
     }
+
+    void* CopyBytes(const void* src, size_t length)
+    {
+        void* dst = IL2CPP_MALLOC(length);
+        std::memcpy(dst, src, length);
+        return dst;
+    }
 }
 
 

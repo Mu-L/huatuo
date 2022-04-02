@@ -13,9 +13,6 @@
 #include "../metadata/MetadataUtil.h"
 #include "../transform/Transform.h"
 
-
-
-
 namespace huatuo
 {
 namespace interpreter
@@ -133,7 +130,7 @@ namespace interpreter
 		}
 	}
 
-	bool InterpreterModule::ComputSignature(const Il2CppType* ret, const Il2CppType* params, uint32_t paramCount, bool instanceCall, char* sigBuf, size_t bufferSize)
+	bool ComputSignature(const Il2CppType* ret, const Il2CppType* params, uint32_t paramCount, bool instanceCall, char* sigBuf, size_t bufferSize)
 	{
 		size_t pos = 0;
 		AppendSignature(ret, true, sigBuf, bufferSize, pos);
@@ -151,7 +148,7 @@ namespace interpreter
 		return true;
 	}
 
-	bool InterpreterModule::ComputSignature(const Il2CppMethodDefinition* method, bool call, char* sigBuf, size_t bufferSize)
+	bool ComputSignature(const Il2CppMethodDefinition* method, bool call, char* sigBuf, size_t bufferSize)
 	{
 		size_t pos = 0;
 
@@ -173,7 +170,7 @@ namespace interpreter
 		return true;
 	}
 
-	bool InterpreterModule::ComputSignature(const MethodInfo* method, bool call, char* sigBuf, size_t bufferSize)
+	bool ComputSignature(const MethodInfo* method, bool call, char* sigBuf, size_t bufferSize)
 	{
 		size_t pos = 0;
 
@@ -196,7 +193,7 @@ namespace interpreter
 	const NativeCallMethod* GetNativeCallMethod(const T* method, bool forceStatic)
 	{
 		char sigName[1000];
-		InterpreterModule::ComputSignature(method, !forceStatic, sigName, sizeof(sigName) - 1);
+		ComputSignature(method, !forceStatic, sigName, sizeof(sigName) - 1);
 		auto it = s_calls.find(sigName);
 		return (it != s_calls.end()) ? &it->second : nullptr;
 	}
@@ -205,14 +202,40 @@ namespace interpreter
 	const NativeInvokeMethod* GetNativeInvokeMethod(const T* method)
 	{
 		char sigName[1000];
-		InterpreterModule::ComputSignature(method, false, sigName, sizeof(sigName) - 1);
+		ComputSignature(method, false, sigName, sizeof(sigName) - 1);
 		auto it = s_invokes.find(sigName);
 		return (it != s_invokes.end()) ? &it->second : nullptr;
+	}
+
+	static void RaiseMethodNotSupportException(const MethodInfo* method, const char* desc)
+	{
+		TEMP_FORMAT(errMsg, "%s not support. %s.%s::%s", desc, method->klass->namespaze, method->klass->name, method->name);
+		il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeLoadException(errMsg));
+	}
+
+	static void RaiseMethodNotSupportException(const Il2CppMethodDefinition* method, const char* desc)
+	{
+		Il2CppClass* klass = il2cpp::vm::GlobalMetadata::GetTypeInfoFromTypeDefinitionIndex(method->declaringType);
+		TEMP_FORMAT(errMsg, "%s not support. %s.%s::%s", desc, klass->namespaze, klass->name, il2cpp::vm::GlobalMetadata::GetStringFromIndex(method->nameIndex));
+		il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeLoadException(errMsg));
 	}
 
 	static void NotSupportAOTSignature()
 	{
 		il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeInitializationException("", nullptr));
+	}
+
+	void NotSupportManaged2Native(const MethodInfo* method, uint16_t* argVarIndexs, StackObject* localVarBase, void* ret)
+	{
+		TEMP_FORMAT(errMsg, "Managed2Native method missing. %s.%s::%s", method->klass->namespaze, method->klass->name, method->name);
+		il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeLoadException(errMsg));
+	}
+
+	static void* NotSupportInvoke(Il2CppMethodPointer, const MethodInfo* method, void*, void**)
+	{
+		TEMP_FORMAT(errMsg, "Invoke method missing. %s.%s::%s", method->klass->namespaze, method->klass->name, method->name);
+		il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeLoadException(errMsg));
+		return nullptr;
 	}
 
 	Il2CppMethodPointer InterpreterModule::GetMethodPointer(const Il2CppMethodDefinition* method)
@@ -222,9 +245,9 @@ namespace interpreter
 		{
 			return ncm->method;
 		}
-		return NotSupportAOTSignature;
+		//RaiseMethodNotSupportException(method, "GetMethodPointer");
+		return (Il2CppMethodPointer)NotSupportManaged2Native;
 	}
-
 
 	Il2CppMethodPointer InterpreterModule::GetMethodPointer(const MethodInfo* method)
 	{
@@ -233,7 +256,8 @@ namespace interpreter
 		{
 			return ncm->method;
 		}
-		return NotSupportAOTSignature;
+		//RaiseMethodNotSupportException(method, "GetMethodPointer");
+		return (Il2CppMethodPointer)NotSupportManaged2Native;
 	}
 
 	Il2CppMethodPointer InterpreterModule::GetAdjustThunkMethodPointer(const Il2CppMethodDefinition* method)
@@ -247,7 +271,8 @@ namespace interpreter
 		{
 			return ncm->adjustThunkMethod;
 		}
-		return NotSupportAOTSignature;
+		//RaiseMethodNotSupportException(method, "GetAdjustThunkMethodPointer");
+		return (Il2CppMethodPointer)NotSupportManaged2Native;
 	}
 
 	Il2CppMethodPointer InterpreterModule::GetAdjustThunkMethodPointer(const MethodInfo* method)
@@ -261,12 +286,8 @@ namespace interpreter
 		{
 			return ncm->adjustThunkMethod;
 		}
-		return NotSupportAOTSignature;
-	}
-
-	void NotSupportManaged2Native(const MethodInfo* method, uint16_t* argVarIndexs, StackObject* localVarBase, void* ret)
-	{
-		il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeInitializationException("", nullptr));
+		//RaiseMethodNotSupportException(method, "GetAdjustThunkMethodPointer");
+		return (Il2CppMethodPointer)NotSupportManaged2Native;
 	}
 
 	Managed2NativeCallMethod InterpreterModule::GetManaged2NativeMethodPointer(const MethodInfo* method, bool forceStatic)
@@ -276,7 +297,8 @@ namespace interpreter
 		{
 			return ncm->managed2NativeMethod;
 		}
-		return NotSupportManaged2Native;
+		RaiseMethodNotSupportException(method, "GetManaged2NativeMethodPointer");
+		return nullptr;
 	}
 
 	Managed2NativeCallMethod InterpreterModule::GetManaged2NativeMethodPointer(const metadata::ResolveStandAloneMethodSig& method)
@@ -288,12 +310,7 @@ namespace interpreter
 		{
 			return it->second.managed2NativeMethod;
 		}
-		return NotSupportManaged2Native;
-	}
-
-	static void* NotSupportInvoke(Il2CppMethodPointer, const MethodInfo*, void*, void**)
-	{
-		il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeInitializationException("", nullptr));
+		il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetMissingMethodException(sigName));
 		return nullptr;
 	}
 
@@ -304,7 +321,8 @@ namespace interpreter
 		{
 			return huatuo::metadata::IsInstanceMethod(method) ? nim->instanceMethod : nim->staticMethod;
 		}
-		return NotSupportInvoke;
+		//RaiseMethodNotSupportException(method, "GetMethodInvoker");
+		return (InvokerMethod)NotSupportInvoke;
 	}
 
 	InvokerMethod InterpreterModule::GetMethodInvoker(const MethodInfo* method)
@@ -314,7 +332,8 @@ namespace interpreter
 		{
 			return huatuo::metadata::IsInstanceMethod(method) ? nim->instanceMethod : nim->staticMethod;
 		}
-		return NotSupportInvoke;
+		//RaiseMethodNotSupportException(method, "GetMethodInvoker");
+		return (InvokerMethod)NotSupportInvoke;
 	}
 
 	InterpMethodInfo* InterpreterModule::GetInterpMethodInfo(metadata::Image* image, const MethodInfo* methodInfo)
@@ -333,8 +352,6 @@ namespace interpreter
 		const_cast<MethodInfo*>(methodInfo)->huatuoData = imi;
 		return imi;
 	}
-
-
 }
 }
 

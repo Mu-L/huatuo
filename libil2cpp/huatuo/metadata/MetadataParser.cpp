@@ -12,6 +12,8 @@
 #include "metadata/GenericMetadata.h"
 #include "icalls/mscorlib/System.Reflection/FieldInfo.h"
 #include "icalls/mscorlib/System.Reflection/PropertyInfo.h"
+#include "icalls/mscorlib/System/Type.h"
+#include "utils/StringUtils.h"
 
 
 #include "MetadataParser.h"
@@ -24,36 +26,10 @@ namespace huatuo
 {
 namespace metadata
 {
-
-    uint32_t MetadataParser::ReadEncodedLength(const byte* buf, uint32_t& lengthSize)
-    {
-        uint32_t firstByte = buf[0];
-        if (firstByte < 128)
-        {
-            lengthSize = 1;
-            return firstByte;
-        }
-        else if (firstByte < 192)
-        {
-            lengthSize = 2;
-            return ((firstByte & 0x3f) << 8) | buf[1];
-        }
-        else if (firstByte < 224)
-        {
-            lengthSize = 3;
-            return ((firstByte & 0x1f) << 16) | (((uint32_t)buf[1]) << 8) | ((uint32_t)buf[2]);
-        }
-        else
-        {
-            IL2CPP_ASSERT(0);
-            return 0;
-        }
-    }
-
     BlobReader MetadataParser::DecodeBlob(Image& image, const byte* buf)
     {
         uint32_t sizeLength;
-        uint32_t length = ReadEncodedLength(buf, sizeLength);
+        uint32_t length = BlobReader::ReadCompressedUint32(buf, sizeLength);
         return BlobReader(image, buf + sizeLength, length);
     }
 
@@ -115,17 +91,17 @@ namespace metadata
             ReadTypeFromTypeDef(image, rowIndex, ret.type);
             break;
         case huatuo::metadata::TableType::METHOD:
-            IL2CPP_ASSERT(false);
+            RaiseHuatuoNotSupportedException("ReadMemberRefParentFromToken. from METHOD");
             break;
         case huatuo::metadata::TableType::MODULEREF:
-            IL2CPP_ASSERT(false);
+            RaiseHuatuoNotSupportedException("ReadMemberRefParentFromToken. from MODULEREF");
             break;
         case huatuo::metadata::TableType::TYPESPEC:
             ReadTypeFromTypeSpec(image, klassGenericContainer, methodGenericContainer, rowIndex, ret.type);
             break;
         default:
         {
-            IL2CPP_ASSERT(false);
+            RaiseHuatuoExecutionEngineException("ReadMemberRefParentFromToken. invalid table type");
             break;
         }
         }
@@ -135,7 +111,7 @@ namespace metadata
 
     void MetadataParser::ReadArrayType(BlobReader& reader, const Il2CppGenericContainer* klassGenericContainer, const Il2CppGenericContainer* methodGenericContainer, Il2CppArrayType& type)
     {
-        // TODO memory cache
+        // FIXME memory leak
         Il2CppType* eleType = (Il2CppType*)IL2CPP_MALLOC_ZERO(sizeof(Il2CppType));
         ReadType(reader, klassGenericContainer, methodGenericContainer, *eleType);
         type.etype = eleType;
@@ -258,7 +234,7 @@ namespace metadata
             break;
         case IL2CPP_TYPE_FNPTR:
         {
-            IL2CPP_ASSERT(false);
+            RaiseHuatuoNotSupportedException("MetadataParser::ReadType IL2CPP_TYPE_FNPTR");
             break;
         }
         case IL2CPP_TYPE_OBJECT:
@@ -307,6 +283,20 @@ namespace metadata
         {
             ++type.num_mods;
             uint32_t encodeToken = reader.ReadCompressedUint32();
+            Il2CppType modType = {};
+            ReadTypeFromToken(reader.GetImage(), nullptr, nullptr, DecodeTypeDefOrRefOrSpecCodedIndexTableType(encodeToken), DecodeTypeDefOrRefOrSpecCodedIndexRowIndex(encodeToken), modType);
+            Il2CppClass* klass = il2cpp::vm::Class::FromIl2CppType(&modType);
+            if (std::strcmp(klass->namespaze, "System.Runtime.InteropServices") == 0)
+            {
+                if (std::strcmp(klass->name, "InAttribute") == 0)
+                {
+                    type.attrs |= PARAM_ATTRIBUTE_IN;
+                }
+                else if (std::strcmp(klass->name, "OutAttribute") == 0)
+                {
+                    type.attrs |= PARAM_ATTRIBUTE_OUT;
+                }
+            }
             goto readAgain;
             break;
         }
@@ -318,11 +308,13 @@ namespace metadata
             break;
         }
         case IL2CPP_TYPE_INTERNAL:
-            IL2CPP_ASSERT(false);
+        {
+            RaiseHuatuoNotSupportedException("MetadataParser::ReadType IL2CPP_TYPE_INTERNAL");
             break;
+        }
         case IL2CPP_TYPE_MODIFIER:
         {
-            IL2CPP_ASSERT(false);
+            RaiseHuatuoNotSupportedException("MetadataParser::ReadType IL2CPP_TYPE_MODIFIER");
             break;
         }
         case IL2CPP_TYPE_SENTINEL:
@@ -336,7 +328,9 @@ namespace metadata
             break;
         }
         default:
-            IL2CPP_ASSERT(false);
+        {
+            RaiseBadImageException("MetadataParser::ReadType invalid type");
+        }
             break;
         }
     }
@@ -350,12 +344,12 @@ namespace metadata
         {
         case TableType::MODULE:
         {
-            IL2CPP_ASSERT(false);
+            RaiseHuatuoNotSupportedException("MetadataParser::ReadTypeFromResolutionScope not support ResolutionScore.MODULE");
             break;
         }
         case TableType::MODULEREF:
         {
-            IL2CPP_ASSERT(false);
+            RaiseHuatuoNotSupportedException("MetadataParser::ReadTypeFromResolutionScope not support ResolutionScore.MODULEREF");
             break;
         }
         case TableType::ASSEMBLYREF:
@@ -373,6 +367,11 @@ namespace metadata
 
             void* iter = nullptr;
             Il2CppMetadataTypeHandle enclosingTypeDef = enClosingType.data.typeHandle;
+            if (!enclosingTypeDef)
+            {
+                TEMP_FORMAT(errMsg, "MetadataParser::ReadTypeFromResolutionScope ReadTypeFromResolutionScope.TYPEREF enclosingType:%s", name);
+                RaiseHuatuoExecutionEngineException(errMsg);
+            }
             IL2CPP_ASSERT(enclosingTypeDef);
             for (const Il2CppTypeDefinition* nextTypeDef; (nextTypeDef = (const Il2CppTypeDefinition*)il2cpp::vm::GlobalMetadata::GetNestedTypes(enclosingTypeDef, &iter));)
             {
@@ -384,19 +383,23 @@ namespace metadata
                     return;
                 }
             }
-            IL2CPP_ASSERT(false);
+            
             break;
         }
         default:
-            IL2CPP_ASSERT(false);
+        {
+            RaiseBadImageException("MetadataParser::ReadTypeFromResolutionScope invaild TableType");
             break;
+        }
         }
         IL2CPP_ASSERT(type.data.typeHandle);
     }
 
     void MetadataParser::ReadTypeFromTypeDef(Image& image, uint32_t rowIndex, Il2CppType& type)
     {
-        type = *image.GetIl2CppTypeFromRawTypeDefIndex(rowIndex - 1);
+        const Il2CppType* typeDef = image.GetIl2CppTypeFromRawTypeDefIndex(rowIndex - 1);
+        type.type = typeDef->type;
+        type.data.typeHandle = typeDef->data.typeHandle;
     }
 
     void MetadataParser::ReadTypeFromTypeRef(Image& image, uint32_t rowIndex, Il2CppType& type)
@@ -441,7 +444,7 @@ namespace metadata
         }
         default:
         {
-            IL2CPP_ASSERT(false);
+            RaiseBadImageException("MetadataParser::ReadTypeFromToken invalid TableType");
             break;
         }
         }
@@ -563,6 +566,7 @@ namespace metadata
             TbMethodSpec methodSpec = TableReader::ReadMethodSpec(image, rowIndex);
 
             ReadMethodSpecInstantiation(image, methodSpec.instantiation, klassGenericContainer, methodGenericContainer, ret.instantiation);
+            //FIXME instantiation memory leak
 
             TableType methodTableType = DecodeMethodDefOrRefCodedIndexTableType(methodSpec.method);
             uint32_t methodRowIndex = DecodeMethodDefOrRefCodedIndexRowIndex(methodSpec.method);
@@ -580,7 +584,7 @@ namespace metadata
             }
             default:
             {
-                IL2CPP_ASSERT(false);
+                RaiseBadImageException("MetadataParser::ReadMethodRefInfoFromToken METHODSPEC invalid TableType");
                 break;
             }
             }
@@ -588,7 +592,7 @@ namespace metadata
         }
         default:
         {
-            IL2CPP_ASSERT(false);
+            RaiseBadImageException("MetadataParser::ReadMethodRefInfoFromToken invalid TableType");
         }
         }
     }
@@ -705,14 +709,24 @@ namespace metadata
     const Il2CppTypeDefinition* MetadataParser::GetTypeDefinition(Image& image, uint32_t assemblyRefIndex, uint32_t typeNamespace, uint32_t typeName)
     {
         TbAssemblyRef data = TableReader::ReadAssemblyRef(image, assemblyRefIndex);
-        const Il2CppAssembly* refAss = il2cpp::vm::Assembly::GetLoadedAssembly(image.GetStringFromRawIndex(data.name));
+        const char* assName = image.GetStringFromRawIndex(data.name);
         const char* typeNameStr = image.GetStringFromRawIndex(typeName);
         const char* typeNamespaceStr = image.GetStringFromRawIndex(typeNamespace);
-        const Il2CppImage* image2 = il2cpp::vm::Assembly::GetImage(refAss);
-        Il2CppClass* klass = il2cpp::vm::Class::FromName(image2, typeNamespaceStr, typeNameStr);
-        const Il2CppTypeDefinition* typeDef = (const Il2CppTypeDefinition*)klass->typeMetadataHandle;
-        IL2CPP_ASSERT(typeDef);
-        return typeDef;
+        const Il2CppAssembly* refAss = il2cpp::vm::Assembly::GetLoadedAssembly(assName);
+        Il2CppClass* klass = nullptr;
+        if (refAss)
+        {
+            const Il2CppImage* image2 = il2cpp::vm::Assembly::GetImage(refAss);
+            klass = il2cpp::vm::Class::FromName(image2, typeNamespaceStr, typeNameStr);
+        }
+        if (!klass || !klass->typeMetadataHandle)
+        {
+            il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeLoadException(
+                CStringToStringView(typeNamespaceStr),
+                CStringToStringView(typeNameStr),
+                CStringToStringView(assName)));
+        }
+        return (const Il2CppTypeDefinition*)klass->typeMetadataHandle;
     }
 
 
@@ -721,10 +735,12 @@ namespace metadata
         byte b = reader.PeekByte();
         if (b == 0xFF)
         {
+            reader.SkipByte();
             return nullptr;
         }
         else if (b == 0)
         {
+            reader.SkipByte();
             return il2cpp::vm::String::Empty();
         }
         else
@@ -820,13 +836,126 @@ namespace metadata
         }
         case IL2CPP_TYPE_CLASS:
         {
-            IL2CPP_ASSERT(false);
+            Il2CppClass* klass = il2cpp::vm::Class::FromIl2CppType(argType);
+            if (!klass)
+            {
+                RaiseHuatuoExecutionEngineException("type not find");
+            }
+            if (klass == il2cpp_defaults.object_class)
+            {
+                Il2CppType boxedValueType = {};
+                boxedValueType.type = (Il2CppTypeEnum)reader.ReadByte();
+                Il2CppClass* valKlass = il2cpp::vm::Class::FromIl2CppType(&boxedValueType);
+                IL2CPP_ASSERT(valKlass);
+                uint64_t val = 0;
+                ReadFixedArg(reader, &boxedValueType, &val);
+                *(Il2CppObject**)data = il2cpp::vm::Object::Box(valKlass, &val);
+            }
+            else if (klass == il2cpp_defaults.systemtype_class)
+            {
+                Il2CppString* fullName = ReadSerString(reader);
+                Il2CppReflectionType* type = il2cpp::icalls::mscorlib::System::Type::internal_from_name(fullName, true, false);
+                if (!type)
+                {
+                    std::string stdTypeName = il2cpp::utils::StringUtils::Utf16ToUtf8(fullName->chars);
+                    TEMP_FORMAT(errMsg, "CustomAttribute fixed arg type:System.Type fullName:'%s' not find", stdTypeName.c_str());
+                    il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeLoadException(errMsg));
+                }
+                *(Il2CppReflectionType**)data = type;
+            }
+            else
+            {
+                TEMP_FORMAT(errMsg, "fixed arg type:%s.%s not support", klass->namespaze, klass->name);
+                RaiseHuatuoNotSupportedException(errMsg);
+            }
+            break;
+        }
+        case IL2CPP_TYPE_VALUETYPE:
+        {
+            Il2CppClass* valueType = il2cpp::vm::Class::FromIl2CppType(argType);
+            IL2CPP_ASSERT(valueType->enumtype);
+            ReadFixedArg(reader, &valueType->element_class->byval_arg, data);
+            break;
+        }
+        case IL2CPP_TYPE_SYSTEM_TYPE:
+        {
+            Il2CppString* fullName = ReadSerString(reader);
+            Il2CppReflectionType* type = il2cpp::icalls::mscorlib::System::Type::internal_from_name(fullName, true, false);
+            if (!type)
+            {
+                std::string stdTypeName = il2cpp::utils::StringUtils::Utf16ToUtf8(fullName->chars);
+                TEMP_FORMAT(errMsg, "CustomAttribute fixed arg type:System.Type fullName:'%s' not find", stdTypeName.c_str());
+                il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeLoadException(errMsg));
+            }
+            *(Il2CppReflectionType**)data = type;
+            break;
+        }
+        case IL2CPP_TYPE_BOXED_OBJECT:
+        {
+            uint8_t fieldOrPropType = reader.ReadByte();
+            IL2CPP_ASSERT(fieldOrPropType == 0x51);
+            Il2CppType boxedValueType = {};
+            boxedValueType.type = (Il2CppTypeEnum)reader.ReadByte();
+            Il2CppClass* valKlass = il2cpp::vm::Class::FromIl2CppType(&boxedValueType);
+            IL2CPP_ASSERT(valKlass);
+            uint64_t val = 0;
+            ReadFixedArg(reader, &boxedValueType, &val);
+            *(Il2CppObject**)data = il2cpp::vm::Object::Box(valKlass, &val);
+            break;
+        }
+        case IL2CPP_TYPE_ENUM:
+        {
+            Il2CppClass* valueType = il2cpp::vm::Class::FromIl2CppType(argType);
+            IL2CPP_ASSERT(valueType->enumtype);
+            ReadFixedArg(reader, &valueType->element_class->byval_arg, data);
             break;
         }
         default:
         {
-            IL2CPP_ASSERT(false);
+            RaiseHuatuoExecutionEngineException("not support fixed argument type");
         }
+        }
+    }
+
+    void ReadCustomAttributeFieldOrPropType(BlobReader& reader, Il2CppType& type)
+    {
+        type.type = (Il2CppTypeEnum)reader.ReadByte();
+
+        switch (type.type)
+        {
+        case IL2CPP_TYPE_SZARRAY:
+        {
+            // FIXME MEMORY LEAK
+            Il2CppType* eleType = (Il2CppType*)IL2CPP_MALLOC_ZERO(sizeof(Il2CppType));
+            ReadCustomAttributeFieldOrPropType(reader, *eleType);
+            type.data.type = eleType;
+            break;
+        }
+        case IL2CPP_TYPE_ENUM:
+        {
+            Il2CppString* enumTypeName = ReadSerString(reader);
+
+            Il2CppReflectionType* enumType = il2cpp::icalls::mscorlib::System::Type::internal_from_name(enumTypeName, true, false);
+            if (!enumType)
+            {
+                std::string stdStrName = il2cpp::utils::StringUtils::Utf16ToUtf8(enumTypeName->chars);
+                TEMP_FORMAT(errMsg, "ReadCustomAttributeFieldOrPropType enum:'%s' not exists", stdStrName.c_str());
+                RaiseExecuteEngineException(errMsg);
+            }
+            type = *enumType->type;
+            break;
+        }
+        case IL2CPP_TYPE_SYSTEM_TYPE:
+        {
+            type = il2cpp_defaults.systemtype_class->byval_arg;
+            break;
+        }
+        case IL2CPP_TYPE_BOXED_OBJECT:
+        {
+            type = il2cpp_defaults.object_class->byval_arg;
+            break;
+        }
+        
         }
     }
 
@@ -863,26 +992,49 @@ namespace metadata
         Il2CppClass* klass = obj->klass;
         for (uint16_t idx = 0; idx < numNamed; idx++)
         {
-            byte fieldOrPropType = reader.ReadByte();
-            IL2CPP_ASSERT(fieldOrPropType == 0x53 || fieldOrPropType == 0x54);
-            Il2CppType type = {};
-            type.type = (Il2CppTypeEnum)reader.ReadByte();
-            Il2CppString* name = ReadSerString(reader);
+            byte fieldOrPropTypeTag = reader.ReadByte();
+            IL2CPP_ASSERT(fieldOrPropTypeTag == 0x53 || fieldOrPropTypeTag == 0x54);
+            Il2CppType fieldOrPropType = {};
+            ReadCustomAttributeFieldOrPropType(reader, fieldOrPropType);
+            Il2CppString* fieldOrPropName = ReadSerString(reader);
+            std::string stdStrName = il2cpp::utils::StringUtils::Utf16ToUtf8(fieldOrPropName->chars);
+            const char* cstrName = stdStrName.c_str();
             uint64_t value = 0;
-            ReadFixedArg(reader, &type, &value);
-            if (fieldOrPropType == 0x53)
+            ReadFixedArg(reader, &fieldOrPropType, &value);
+            if (fieldOrPropTypeTag == 0x53)
             {
-                FieldInfo* field = il2cpp::vm::Class::GetFieldFromName(klass, (const char*)name->chars);
-                IL2CPP_ASSERT(field);
+                FieldInfo* field = il2cpp::vm::Class::GetFieldFromName(klass, cstrName);
+                if (!field)
+                {
+                    TEMP_FORMAT(errMsg, "CustomAttribute field missing. klass:%s.%s field:%s", klass->namespaze, klass->name, cstrName);
+                    il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeInitializationException(errMsg, nullptr));
+                }
                 Il2CppReflectionField* refField = il2cpp::vm::Reflection::GetFieldObject(klass, field);
+                IL2CPP_ASSERT(IsTypeEqual(&fieldOrPropType, field->type));
+                uint32_t fieldSize = GetTypeValueSize(&fieldOrPropType);
+                std::memcpy((byte*)obj + field->offset, &value, fieldSize);
+                //fixme MEMORY BARRIER
                 IL2CPP_ASSERT(refField);
             }
             else
             {
-                const PropertyInfo* prop = il2cpp::vm::Class::GetPropertyFromName(klass, (const char*)name->chars);
-                IL2CPP_ASSERT(prop);
+                const PropertyInfo* prop = il2cpp::vm::Class::GetPropertyFromName(klass, cstrName);
+                if (!prop)
+                {
+                    TEMP_FORMAT(errMsg, "CustomAttribute property missing. klass:%s property:%s", klass->name, cstrName);
+                    il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeInitializationException(errMsg, nullptr));
+                }
+                IL2CPP_ASSERT(IsTypeEqual(&fieldOrPropType, prop->set->parameters[0].parameter_type));
+                Il2CppException* ex = nullptr;
+                Il2CppClass* propKlass = il2cpp::vm::Class::FromIl2CppType(&fieldOrPropType);
+                IL2CPP_ASSERT(propKlass);
+                void* args[] = { (propKlass->valuetype ? &value : (void*)value) };
+                il2cpp::vm::Runtime::Invoke(prop->set, obj, args, &ex);
+                if (ex)
+                {
+                    il2cpp::vm::Exception::Raise(ex);
+                }
             }
-            IL2CPP_ASSERT(false);
         }
     }
 

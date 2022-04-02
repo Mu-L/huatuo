@@ -157,10 +157,10 @@ typedef void (STDCALL *SynchronizationContextCallback)(intptr_t arg);
 #endif
 
 //==={{ huatuo
-#if DEBUG || defined(FORCE_STACKTRACE_SENTRIES)
-#define IL2CPP_ENABLE_STACKTRACE_SENTRIES 1
-#define IL2CPP_ENABLE_NATIVE_STACKTRACES 0
-#endif
+//#if DEBUG || defined(FORCE_STACKTRACE_SENTRIES)
+//#define IL2CPP_ENABLE_STACKTRACE_SENTRIES 1
+//#define IL2CPP_ENABLE_NATIVE_STACKTRACES 0
+//#endif
 //===}} huatuo
 
 /* Platforms which use OS specific implementation to extract stracktrace */

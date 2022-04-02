@@ -13,7 +13,6 @@
 #include "metadata/MetadataModule.h"
 #include "transform/Transform.h"
 
-using namespace il2cpp;
 
 namespace huatuo
 {

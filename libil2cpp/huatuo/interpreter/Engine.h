@@ -6,7 +6,11 @@
 #include "vm/Exception.h"
 #include "vm/StackTrace.h"
 
+#include "../metadata/MetadataDef.h"
+
 #include "../CommonDef.h"
+#include "../HuatuoConfig.h"
+
 
 #if DEBUG
 #define PUSH_STACK_FRAME(method) do { \
@@ -73,21 +77,70 @@ namespace interpreter
 		//std::vector<void*> *bigLocalAllocs;
 	};
 
-	const uint32_t kMaxStackObjectCount = 1024 * 128;
-	const uint32_t kMaxFrameCount = 1024;
+
+
+	struct InterpExceptionClause
+	{
+		metadata::CorILExceptionClauseType flags;
+		int32_t tryBeginOffset;
+		int32_t tryEndOffset;
+		int32_t handlerBeginOffset;
+		int32_t handlerEndOffset;
+		int32_t filterBeginOffset;
+		Il2CppClass* exKlass;
+	};
+
+	// from obj or arg
+	enum class LocationDataType
+	{
+		I1,
+		U1,
+		I2,
+		U2,
+		U8,
+		S_16, // struct size == 16
+		S_24, // struct size == 24
+		S_32, // struct size == 32
+		S_N,  // struct size > 32, size is described by stackObjectSize
+	};
+
+	struct ArgDesc
+	{
+		LocationDataType type;
+		uint32_t stackObjectSize; //
+	};
+
+	struct InterpMethodInfo
+	{
+		const MethodInfo* method;
+		ArgDesc* args;
+		uint32_t argCount;
+		uint32_t argStackObjectSize;
+		byte* codes;
+		uint32_t codeLength;
+		uint32_t maxStackSize; // args + locals + evalstack size
+		uint32_t localVarBaseOffset;
+		uint32_t evalStackBaseOffset;
+		uint32_t localStackSize; // args + locals StackObject size
+		std::vector<const void*> resolveDatas;
+		std::vector<InterpExceptionClause*> exClauses;
+		uint32_t isTrivialCopyArgs : 1;
+	};
+
 
 	class MachineState
 	{
 	public:
 		MachineState()
 		{
-			_stackSize = kMaxStackObjectCount;
-			_stackBase = (StackObject*)il2cpp::gc::GarbageCollector::AllocateFixed(kMaxStackObjectCount * sizeof(StackObject), nullptr);
+			HuatuoConfig& hc = HuatuoConfig::GetIns();
+			_stackSize = hc.GetMaxStackObjectCount();
+			_stackBase = (StackObject*)il2cpp::gc::GarbageCollector::AllocateFixed(hc.GetMaxStackObjectCount() * sizeof(StackObject), nullptr);
 			std::memset(_stackBase, 0, _stackSize * sizeof(StackObject));
 			_stackTopIdx = 0;
 
-			_frameBase = (InterpFrame*)IL2CPP_CALLOC(kMaxFrameCount, sizeof(InterpFrame));
-			_frameCount = kMaxFrameCount;
+			_frameBase = (InterpFrame*)IL2CPP_CALLOC(hc.GetMaxFrameCount(), sizeof(InterpFrame));
+			_frameCount = hc.GetMaxFrameCount();
 			_frameTopIdx = 0;
 		}
 
@@ -154,6 +207,45 @@ namespace interpreter
 			_frameTopIdx -= count;
 		}
 
+		const InterpFrame* GetTopFrame() const
+		{
+			if (_frameTopIdx > 0)
+			{
+				return _frameBase + _frameTopIdx - 1;
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+
+		//const InterpFrame* GetFrameBaseMinusOne() const
+		//{
+		//	return _frameBase - 1;
+		//}
+
+		void PushExecutingImage(const Il2CppImage* image)
+		{
+			_executingImageStack.push(image);
+		}
+
+		void PopExecutingImage()
+		{
+			_executingImageStack.pop();
+		}
+
+		const Il2CppImage* GetTopExecutingImage() const
+		{
+			if (_executingImageStack.empty())
+			{
+				return nullptr;
+			}
+			else
+			{
+				return _executingImageStack.top();
+			}
+		}
+
 	private:
 
 		StackObject* _stackBase;
@@ -163,7 +255,48 @@ namespace interpreter
 		InterpFrame* _frameBase;
 		uint32_t _frameTopIdx;
 		uint32_t _frameCount;
+
+		std::stack<const Il2CppImage*> _executingImageStack;
 	};
+
+	class ExecutingInterpImageScope
+	{
+	public:
+		ExecutingInterpImageScope(MachineState& state, const Il2CppImage* image) : _state(state)
+		{
+			_state.PushExecutingImage(image);
+		}
+
+		~ExecutingInterpImageScope()
+		{
+			_state.PopExecutingImage();
+		}
+		
+	private:
+		MachineState& _state;
+	};
+
+	//class NativeInterpFrameGroup
+	//{
+	//public:
+	//	NativeInterpFrameGroup(MachineState& state, const MethodInfo* method) : _state(state), _interMethod({})
+	//	{
+	//		
+	//		InterpFrame* frame = state.PushFrame();
+	//		*frame = {};
+	//		_interMethod.method = method;
+	//		frame->method = &_interMethod;
+	//	}
+
+	//	~NativeInterpFrameGroup()
+	//	{
+	//		_state.PopFrame();
+	//	}
+
+	//private:
+	//	MachineState _state;
+	//	InterpMethodInfo _interMethod;
+	//};
 
 	class InterpFrameGroup
 	{
@@ -198,7 +331,7 @@ namespace interpreter
 
 		void* AllocLoc(size_t size)
 		{
-			uint32_t soNum = (uint32_t)(size + sizeof(StackObject) - 1) / sizeof(StackObject);
+			uint32_t soNum = (uint32_t)((size + sizeof(StackObject) - 1) / sizeof(StackObject));
 			return _machineState.AllocStackSlot(soNum);
  		}
 	private:

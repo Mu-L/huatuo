@@ -308,10 +308,10 @@ if (ARR->max_length <= (*(uint32_t*)(localVarBase + __index))) { \
 					result = il2cpp_codegen_get_virtual_invoke_data(method->slot, obj).method;
 				}*/
 			}
-			if (result->genericMethod && method->genericMethod) // means it's genericInstance method 或generic method
+			if (result->genericMethod /* && method->genericMethod*/) // means it's genericInstance method 或generic method
 			{
 				//IL2CPP_ASSERT(method->genericMethod);
-				result = il2cpp::metadata::GenericMetadata::Inflate(GetUnderlyingMethodInfo(result), &method->genericMethod->context);
+				result = il2cpp::metadata::GenericMetadata::Inflate(GetUnderlyingMethodInfo(result), &result->genericMethod->context);
 			}
 		}
 		else

@@ -30,10 +30,6 @@ namespace interpreter
 
 		static InterpMethodInfo* GetInterpMethodInfo(metadata::Image* image, const MethodInfo* methodInfo);
 
-		static bool ComputSignature(const Il2CppMethodDefinition* method, bool call, char* signatureBuffer, size_t bufferSize);
-		static bool ComputSignature(const MethodInfo* method, bool call, char* sigBuf, size_t bufferSize);
-		static bool ComputSignature(const Il2CppType* ret, const Il2CppType* params, uint32_t paramCount, bool instanceCall, char* sigBuf, size_t bufferSize);
-
 		static Il2CppMethodPointer GetMethodPointer(const Il2CppMethodDefinition* method);
 		static Il2CppMethodPointer GetMethodPointer(const MethodInfo* method);
 		static Il2CppMethodPointer GetAdjustThunkMethodPointer(const Il2CppMethodDefinition* method);
@@ -45,6 +41,7 @@ namespace interpreter
 		static InvokerMethod GetMethodInvoker(const MethodInfo* method);
 
 	private:
+
 		static il2cpp::os::ThreadLocalValue s_machineState;
 	};
 }

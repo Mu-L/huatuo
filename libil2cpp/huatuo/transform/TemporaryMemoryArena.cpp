@@ -21,13 +21,11 @@ namespace transform
 
 	void TemporaryMemoryArena::End()
 	{
-		// TODO free too many blocks
-		//il2cpp::os::FastAutoLock lock(&s_poolLock);
 		if (_buf)
 		{
 			IL2CPP_FREE(_buf);
-			_buf = nullptr;
-			_size = _pos = 0;
+			//_buf = nullptr;
+			//_size = _pos = 0;
 		}
 		for (auto& block : _useOuts)
 		{

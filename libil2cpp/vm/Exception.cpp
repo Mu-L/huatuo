@@ -614,6 +614,11 @@ namespace vm
     {
         return FromNameMsg(Image::GetCorlib(), "System", "BadImageFormatException", msg);
     }
+
+    Il2CppException* Exception::GetMissingFieldException(const char* msg)
+    {
+        return FromNameMsg(Image::GetCorlib(), "System", "MissingFieldException", msg);
+    }
     // ===}} huatuo
 
     void Exception::StoreExceptionInfo(Il2CppException* ex, Il2CppString* exceptionString)

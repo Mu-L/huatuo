@@ -87,6 +87,7 @@ namespace vm
         // ==={{ huatuo
         static Il2CppException* GetStackOverflowException(const char* msg);
         static Il2CppException* GetBadImageFormatException(const char* msg);
+        static Il2CppException* GetMissingFieldException(const char* msg);
         // ===}} huatuo
         static Il2CppException* GetMaxmimumNestedGenericsException();
 

@@ -235,6 +235,8 @@ namespace metadata
 				{
 					const_cast<Il2CppMethodDefinition*>(vm.method)->slot = curOffset;
 					_methodImpls.push_back({ vm.method, _type, curOffset, vm.name });
+					IL2CPP_ASSERT(vm.method->slot == kInvalidIl2CppMethodSlot || vm.method->slot == curOffset);
+					const_cast<Il2CppMethodDefinition*>(vm.method)->slot = curOffset;
 					++curOffset;
 
 					const MethodImpl* matchImpl = nullptr;
@@ -321,6 +323,7 @@ namespace metadata
 				// TODO what if not find override ???
 				IL2CPP_ASSERT(_parent);
 
+				// find override parent virtual methods
 				bool find = false;
 				for (VTableSetUp* curTdt = _parent; curTdt && !find; curTdt = curTdt->_parent)
 				{
@@ -337,26 +340,34 @@ namespace metadata
 					}
 				}
 				IL2CPP_ASSERT(find);
+				IL2CPP_ASSERT(vm.method->slot != kInvalidIl2CppMethodSlot);
 
 				uint16_t slotIdx = vm.method->slot;
+				const Il2CppMethodDefinition* overrideAncestorMethod = _parent->_methodImpls[slotIdx].method;
 
 				// search hierarchy methods, find match method. 
 
-				// check override by same slot
+				// check override parent virtual methods and
 				for (uint16_t idx = 0; idx < checkOverrideMaxIdx; idx++)
 				{
 					VirtualMethodImpl& vmi = _methodImpls[idx];
-					if (!vmi.method)
-					{
-						continue;
-					}
-					if (vmi.method->slot == slotIdx)
+					if (vmi.method == overrideAncestorMethod)
 					{
 						vmi.type = _type;
 						vmi.method = vm.method;
 					}
+					//if (!vmi.method)
+					//{
+					//	continue;
+					//}
+					//if (vmi.method->slot == slotIdx)
+					//{
+					//	vmi.type = _type;
+					//	vmi.method = vm.method;
+					//}
 				}
 
+				// check override implicite implements interface
 				for (uint16_t interfaceIdx : implInterfaceOffsetIdxs)
 				{
 					RawInterfaceOffsetInfo& rioi = _interfaceOffsetInfos[interfaceIdx];

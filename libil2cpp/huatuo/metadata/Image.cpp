@@ -26,6 +26,9 @@
 #include "MetadataUtil.h"
 #include "TableReader.h"
 
+#include "../interpreter/Engine.h"
+#include "../interpreter/InterpreterModule.h"
+
 namespace huatuo
 {
 namespace metadata
@@ -266,7 +269,7 @@ namespace metadata
 
 			pd.nameIndex = EncodeWithIndex(data.name);
 			pd.token = EncodeToken(TableType::PARAM, rowIndex);
-			// TODO pd.typeIndex 在InitMethodDefs中解析signature后填充。
+			// pd.typeIndex 在InitMethodDefs中解析signature后填充。
 		}
 	}
 
@@ -385,12 +388,12 @@ namespace metadata
 			}
 			case TableType::PROPERTY:
 			{
-				IL2CPP_ASSERT(false);
+				RaiseHuatuoNotSupportedException("not support property const");
 				break;
 			}
 			default:
 			{
-				IL2CPP_ASSERT(false);
+				RaiseExecuteEngineException("not support const TableType");
 				break;
 			}
 			}
@@ -470,6 +473,8 @@ namespace metadata
 		{
 			return cache;
 		}
+
+		huatuo::interpreter::ExecutingInterpImageScope scope(huatuo::interpreter::InterpreterModule::GetCurrentThreadMachineState(), this->_il2cppImage);
 
 		cache = (CustomAttributesCache*)IL2CPP_CALLOC(1, sizeof(CustomAttributesCache));
 		cache->count = typeRange.count;
@@ -743,7 +748,7 @@ namespace metadata
 		}
 		if (last)
 		{
-			last->property_count = propertyTb.rowNum - DecodeMetadataIndex(last->propertyStart);
+			last->property_count = propertyTb.rowNum - DecodeMetadataIndex(last->propertyStart) + 1;
 		}
 
 		for (uint32_t rowIndex = 1; rowIndex <= propertyTb.rowNum; rowIndex++)
@@ -773,7 +778,7 @@ namespace metadata
 		}
 		if (last)
 		{
-			last->event_count = eventTb.rowNum - DecodeMetadataIndex(last->eventStart);
+			last->event_count = eventTb.rowNum - DecodeMetadataIndex(last->eventStart) + 1;
 		}
 
 		for (uint32_t rowIndex = 1; rowIndex <= eventTb.rowNum; rowIndex++)
@@ -822,28 +827,42 @@ namespace metadata
 		}
 	}
 
+	struct EnclosingClassInfo
+	{
+		uint32_t enclosingTypeIndex; // rowIndex - 1
+		std::vector<uint32_t> nestedTypeIndexs;
+	};
+
 	void Image::InitNestedClass()
 	{
 		Table& nestedClassTb = _tables[(int)TableType::NESTEDCLASS];
-		_nestedTypeDefineIndexs.resize(nestedClassTb.rowNum);
+		_nestedTypeDefineIndexs.reserve(nestedClassTb.rowNum);
+		std::vector<EnclosingClassInfo> enclosingTypes;
 
-		uint32_t lastEnclosingIdx = 0;
 		for (uint32_t i = 0; i < nestedClassTb.rowNum; i++)
 		{
 			TbNestedClass data = TableReader::ReadNestedClass(*this, i + 1);
-			Il2CppTypeDefinition& typeDef = _typesDefines[data.nestedClass - 1];
-			if (typeDef.nested_type_count == 0)
+			Il2CppTypeDefinition& nestedType = _typesDefines[data.nestedClass - 1];
+			Il2CppTypeDefinition& enclosingType = _typesDefines[data.enclosingClass - 1];
+			if (enclosingType.nested_type_count == 0)
 			{
-				typeDef.nestedTypesStart = (uint32_t)_nestedTypeDefineIndexs.size();
+				// 此行代码不能删，用于标识 enclosingTypes的index
+				enclosingType.nestedTypesStart = (uint32_t)enclosingTypes.size();
+				enclosingTypes.push_back({data.enclosingClass - 1});
 			}
-			else
-			{
-				IL2CPP_ASSERT(data.enclosingClass == lastEnclosingIdx);
-			}
-			++typeDef.nested_type_count;
-			_nestedTypeDefineIndexs.push_back(data.nestedClass - 1);
-			typeDef.declaringTypeIndex = _typesDefines[data.enclosingClass - 1].byvalTypeIndex;
-			lastEnclosingIdx = data.enclosingClass;
+			++enclosingType.nested_type_count;
+			enclosingTypes[enclosingType.nestedTypesStart].nestedTypeIndexs.push_back(data.nestedClass - 1);
+			//_nestedTypeDefineIndexs.push_back(data.nestedClass - 1);
+			nestedType.declaringTypeIndex = enclosingType.byvalTypeIndex;
+		}
+
+		for (auto& enclosingType : enclosingTypes)
+		{
+			Il2CppTypeDefinition& enclosingTypeDef = _typesDefines[enclosingType.enclosingTypeIndex];
+			IL2CPP_ASSERT(enclosingType.nestedTypeIndexs.size() == (size_t)enclosingTypeDef.nested_type_count);
+			enclosingTypeDef.nestedTypesStart = (NestedTypeIndex)_nestedTypeDefineIndexs.size();
+			enclosingTypeDef.nested_type_count = (uint16_t)enclosingType.nestedTypeIndexs.size();
+			_nestedTypeDefineIndexs.insert(_nestedTypeDefineIndexs.end(), enclosingType.nestedTypeIndexs.begin(), enclosingType.nestedTypeIndexs.end());
 		}
 	}
 
@@ -952,7 +971,7 @@ namespace metadata
 		nestedTypeAddress++;
 		ptrdiff_t index = nestedTypeAddress - nestedTypeIndices;
 
-		if (index < typeDefinition->nestedTypesStart + typeDefinition->nested_type_count)
+		if (index < typeDefinition->nested_type_count)
 		{
 			*iter = nestedTypeAddress;
 			return &_typesDefines[*nestedTypeAddress];
@@ -1003,6 +1022,10 @@ namespace metadata
 			// TODO cache
 			Il2CppType* type = (Il2CppType*)IL2CPP_MALLOC_ZERO(sizeof(Il2CppType));
 			MetadataParser::ReadTypeFromToken(*this, klassGenericContainer, methodGenericContainer, ttype, rowIndex, *type);
+			if (genericContext)
+			{
+				type = const_cast<Il2CppType*>(TryInflateIfNeed(type, genericContext, true));
+			}
 			return type;
 		}
 		case huatuo::metadata::TableType::FIELD_POINTER:
@@ -1018,7 +1041,7 @@ namespace metadata
 		}
 		default:
 		{
-			IL2CPP_ASSERT(false);
+			RaiseExecuteEngineException("GetRuntimeHandleFromToken invaild TableType");
 			return nullptr;
 		}
 		}
@@ -1041,6 +1064,7 @@ namespace metadata
 		Il2CppClass* klass = il2cpp::vm::Class::FromIl2CppType(resultType);
 		if (!klass)
 		{
+			TEMP_FORMAT(errMsg, "Image::GetClassFromToken token:%u class not exists", token);
 			il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeLoadException());
 		}
 		// FIXME free resultType
@@ -1052,23 +1076,7 @@ namespace metadata
 	}
 
 
-	inline void ThrowMethodNotFindException(const Il2CppType* type, const char* methodName)
-	{
-		if (!type)
-		{
-			il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeLoadException("type not exists"));
-		}
-		Il2CppClass* klass = il2cpp::vm::Class::FromIl2CppType(type);
-		if (!klass)
-		{
-			il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetTypeLoadException("type not exists"));
-		}
-		
-		char errMsg[100];
-		std::snprintf(errMsg, sizeof(errMsg), "%s.%s::%s", il2cpp::vm::Class::GetNamespace(klass), il2cpp::vm::Class::GetName(klass), methodName);
 
-		il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetMissingMethodException(errMsg));
-	}
 
 	const MethodInfo* GetMethodInfo(const Il2CppType* containerType, const Il2CppMethodDefinition* methodDef, const Il2CppGenericInst* instantiation, const Il2CppGenericContext* genericContext)
 	{
@@ -1083,6 +1091,7 @@ namespace metadata
 			Il2CppGenericContext finalGenericContext = { finalClassIns, finalMethodIns };
 			method = method->is_inflated ? method->genericMethod->methodDefinition : method;
 			method = il2cpp::metadata::GenericMetadata::Inflate(method, &finalGenericContext);
+			IL2CPP_ASSERT(method);
 		}
 		return method;
 	}
@@ -1118,7 +1127,7 @@ namespace metadata
 				}
 			}
 		}
-		ThrowMethodNotFindException(type, resolveMethodName);
+		RaiseMethodNotFindException(type, resolveMethodName);
 		return nullptr;
 	}
 
@@ -1136,8 +1145,6 @@ namespace metadata
 		}
 		case TableType::MEMBERREF:
 		{
-			/*MetadataParser::ReadMethodRefInfoFromMemberRef(image, klassGenericContainer, methodGenericContainer, nullptr, rowIndex, ret);*/
-
 			ResolveMemberRef rmr = {};
 			MetadataParser::ReadResolveMemberRefFromMemberRef(image, klassGenericContainer, methodGenericContainer, rowIndex, rmr);
 			IL2CPP_ASSERT(rmr.parent.parentType == TableType::TYPEDEF || rmr.parent.parentType == TableType::TYPEREF || rmr.parent.parentType == TableType::TYPESPEC);
@@ -1165,7 +1172,7 @@ namespace metadata
 			}
 			default:
 			{
-				IL2CPP_ASSERT(false);
+				RaiseBadImageException("ReadMethodSpec invaild TableType");
 				return nullptr;
 			}
 			}
@@ -1173,7 +1180,7 @@ namespace metadata
 		}
 		default:
 		{
-			IL2CPP_ASSERT(false);
+			RaiseBadImageException("ReadMethodInfoFromToken invaild TableType");
 			return nullptr;
 		}
 		}
@@ -1210,12 +1217,7 @@ namespace metadata
 		//	method = il2cpp::metadata::GenericMetadata::Inflate(method, &finalGenericContext);
 		//}
 
-		if (!method)
-		{
-			char errMsg[100];
-			std::snprintf(errMsg, sizeof(errMsg), "method missing. token:%u", token);
-			il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetMissingMethodException(errMsg));
-		}
+		IL2CPP_ASSERT(method);
 		{
 			il2cpp::os::FastAutoLock lock(&il2cpp::vm::g_MetadataLock);
 			_token2ResolvedDataCache.insert({ key, (void*)method });
@@ -1228,7 +1230,7 @@ namespace metadata
 		MetadataParser::ReadStandAloneSig(*this, token, klassGenericContainer, methodGenericContainer, methodSig);
 		if (genericContext)
 		{
-			// memory leak
+			// FIXME. memory leak
 			methodSig.returnType = *TryInflateIfNeed(&methodSig.returnType, genericContext, true);
 			for (uint32_t i = 0; i < methodSig.paramCount; i++)
 			{
@@ -1273,7 +1275,7 @@ namespace metadata
 			IL2CPP_ASSERT(index >= 0 && (uint32_t)index < _streamUS.size);
 			const byte* str = _streamUS.data + index;
 			uint32_t lengthSize;
-			uint32_t stringLength = MetadataParser::ReadEncodedLength(str, lengthSize);
+			uint32_t stringLength = BlobReader::ReadCompressedUint32(str, lengthSize);
 
 			Il2CppString* clrStr;
 			if (stringLength == 0)

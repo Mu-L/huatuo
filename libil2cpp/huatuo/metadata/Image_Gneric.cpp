@@ -18,6 +18,7 @@
 #include "MetadataModule.h"
 #include "Tables.h"
 #include "MetadataParser.h"
+#include "TableReader.h"
 
 #include "../interpreter/InterpreterModule.h"
 

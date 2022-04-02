@@ -123,14 +123,13 @@ namespace transform
 		{
 			_splitOffsets.erase(0);
 		}*/
+#if DEBUG
 		for (uint32_t offset : _splitOffsets)
 		{
-			if (ilOffsets.find(offset) == ilOffsets.end())
-			{
-				IL2CPP_ASSERT(false && "offset");
-			}
+			IL2CPP_ASSERT(ilOffsets.find(offset) != ilOffsets.end());
 		}
 		IL2CPP_ASSERT(_splitOffsets.find(_body.codeSize) != _splitOffsets.end());
+#endif
 	}
 }
 }

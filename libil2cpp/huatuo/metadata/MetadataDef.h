@@ -54,7 +54,7 @@ namespace metadata
 		uint32_t classTokenOrFilterOffset;
 	};
 
-	static_assert(sizeof(CorILEHSmall) == 12, "err");
+	static_assert(sizeof(CorILEHSmall) == 12, "sizeof(CorILEHSmall) != 12");
 
 	struct CorILEHFat
 	{
@@ -66,7 +66,7 @@ namespace metadata
 		uint32_t classTokenOrFilterOffset;
 	};
 
-	static_assert(sizeof(CorILEHFat) == 24, "err");
+	static_assert(sizeof(CorILEHFat) == 24, "sizeof(CorILEHFat) != 24");
 
 	struct CorILEHSectionHeaderSmall
 	{
@@ -178,16 +178,10 @@ namespace metadata
 		return (uint8_t)(rawSigType & 0xF0);
 	}
 
-
 	inline uint32_t EncodeToken(TableType type, uint32_t index)
 	{
 		return ((uint32_t)type << 24) | index;
 	}
-
-	//inline uint32_t DecodeToken(uint32_t index)
-	//{
-	//    return index & 0xFFFFFF;
-	//}
 
 	inline void DecodeToken(uint32_t token, TableType& type, uint32_t& rowIndex)
 	{
@@ -208,18 +202,6 @@ namespace metadata
 	{
 		return (Il2CppTypeEnum)((uint8_t)encodeType & 0x3f);
 	}
-
-	//inline void DecodeTypeDefOrRefOrSpecCodedIndex(uint32_t encodedToken, TableType& tokenType, uint32_t& rawIndex)
-	//{
-	//    switch (encodedToken & 0x3)
-	//    {
-	//    case 0: tokenType = TableType::TYPEDEF; break;
-	//    case 1: tokenType = TableType::TYPEREF; break;
-	//    case 2: tokenType = TableType::TYPESPEC; break;
-	//    default: IL2CPP_ASSERT(false); break;
-	//    }
-	//    rawIndex = encodedToken >> 2;
-	//}
 
 	inline TableType DecodeTypeDefOrRefOrSpecCodedIndexTableType(uint32_t encodedToken)
 	{
@@ -371,20 +353,6 @@ namespace metadata
 		return EncodeFieldDefOrRefCodedIndex(type, rowIndex);
 	}
 
-	//inline void DecodeMemberRefParentRowIndex(uint32_t encodeIndex, TableType& type, uint32_t& rowIndex)
-	//{
-	//    rowIndex = encodeIndex >> 3;
-	//    switch ((encodeIndex & 0x7))
-	//    {
-	//    case 0: type = TableType::TYPEDEF; break;
-	//    case 1: type = TableType::TYPEREF; break;
-	//    case 2: type = TableType::MODULEREF; break;
-	//    case 3: type = TableType::METHOD; break;
-	//    case 4: type = TableType::TYPESPEC; break;
-	//    default: IL2CPP_ASSERT(false); type = (TableType)-1; break;
-	//    }
-	//}
-
 	inline TableType DecodeMemberRefParentCodedIndexTableType(uint32_t encodeIndex)
 	{
 		switch ((encodeIndex & 0x7))
@@ -518,12 +486,6 @@ namespace metadata
 	{
 		Il2CppType type;
 	};
-
-	//struct ResolveMethodSpec
-	//{
-	//    MethodRefInfo method;
-	//    std::vector<Il2CppType> instantiation;
-	//};
 
 	struct FieldRefInfo
 	{
