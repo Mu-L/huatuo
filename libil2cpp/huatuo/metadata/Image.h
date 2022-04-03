@@ -282,6 +282,7 @@ namespace metadata
 		const MethodInfo* GetMethodInfoFromMethodDefinitionRawIndex(uint32_t index);
 		const MethodInfo* GetMethodInfoFromMethodDefinition(const Il2CppMethodDefinition* methodDef);
 		const Il2CppMethodDefinition* GetMethodDefinitionFromVTableSlot(const Il2CppTypeDefinition* typeDefine, int32_t vTableSlot);
+		const MethodInfo* GetMethodInfoFromVTableSlot(const Il2CppClass* klass, int32_t vTableSlot);
 
 		Il2CppTypeDefinition* GetNestedTypes(Il2CppTypeDefinition* handle, void** iter);
 		const FieldInfo* GetFieldInfoFromMemberRef(const Il2CppType& type, uint32_t name, const Il2CppType& fieldType);
@@ -335,8 +336,6 @@ namespace metadata
 			const MethodInfo* raiseOn = pd.fireMethodIndex ? klass->methods[pd.fireMethodIndex - baseMethodIdx] : nullptr;
 			return { pd.name, &klass->byval_arg, addOn, removeOn, raiseOn, EncodeToken(TableType::EVENT, rowIndex) };
 		}
-
-		const MethodInfo* GetMethodInfoFromVTableSlot(const Il2CppClass* klass, int32_t vTableSlot);
 
 		Il2CppMetadataCustomAttributeHandle GetCustomAttributeTypeToken(uint32_t token)
 		{

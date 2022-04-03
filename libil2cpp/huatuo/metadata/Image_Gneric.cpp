@@ -247,12 +247,30 @@ namespace metadata
 	const MethodInfo* Image::GetMethodInfoFromVTableSlot(const Il2CppClass* klass, int32_t vTableSlot)
 	{
 		IL2CPP_ASSERT(!klass->generic_class);
-		const Il2CppMethodDefinition* methodDef = GetMethodDefinitionFromVTableSlot((Il2CppTypeDefinition*)klass->typeMetadataHandle, vTableSlot);
+		const Il2CppTypeDefinition* typeDef = (Il2CppTypeDefinition*)klass->typeMetadataHandle;
+		//const Il2CppMethodDefinition* methodDef = GetMethodDefinitionFromVTableSlot((Il2CppTypeDefinition*)klass->typeMetadataHandle, vTableSlot);
 		// FIX ME. why return null?
 		//IL2CPP_ASSERT(methodDef);
-		if (methodDef)
+
+		uint32_t typeDefIndex = GetTypeRawIndex(typeDef);
+		IL2CPP_ASSERT(typeDefIndex < (uint32_t)_typeDetails.size());
+		TypeDefinitionDetail& td = _typeDetails[typeDefIndex];
+
+		IL2CPP_ASSERT(vTableSlot >= 0 && vTableSlot < (int32_t)td.vtable.size());
+		VirtualMethodImpl& vmi = td.vtable[vTableSlot];
+		if (vmi.method)
 		{
-			return il2cpp::vm::GlobalMetadata::GetMethodInfoFromMethodHandle((Il2CppMetadataMethodDefinitionHandle)methodDef);
+			if (DecodeMetadataIndex(vmi.method->declaringType) == typeDefIndex)
+			{
+				return il2cpp::vm::GlobalMetadata::GetMethodInfoFromMethodHandle((Il2CppMetadataMethodDefinitionHandle)vmi.method);
+			}
+			else
+			{
+				Il2CppClass* implClass = il2cpp::vm::Class::FromIl2CppType(vmi.type);
+				IL2CPP_ASSERT(implClass != klass);
+				il2cpp::vm::Class::SetupMethods(implClass);
+				return implClass->vtable[vTableSlot].method;
+			}
 		}
 		return nullptr;
 	}
