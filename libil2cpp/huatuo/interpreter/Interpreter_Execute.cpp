@@ -240,11 +240,6 @@ inline bool Compare##cmp(double a, double b) { return a op b; }
 		il2cpp::vm::ClassInlines::InitFromCodegen(klass);
 	}
 
-	inline int32_t GetTypeValueSize(Il2CppClass* klass)
-	{
-		return klass->instance_size - sizeof(Il2CppObject);
-	}
-
 	inline void CHECK_NOT_NULL_THROW(const void* ptr)
 	{
 		if (!ptr)
@@ -287,32 +282,16 @@ if (ARR->max_length <= (*(uint32_t*)(localVarBase + __index))) { \
 			if (huatuo::metadata::IsInterface(method->klass->flags))
 			{
 				result = il2cpp_codegen_get_interface_invoke_data(method->slot, obj, method->klass).method;
-				/*if (method->is_inflated)
-				{
-					result = il2cpp_codegen_get_generic_interface_method(method, obj);
-				}
-				else
-				{
-					result = il2cpp_codegen_get_interface_invoke_data(method->slot, obj, method->klass).method;
-				}*/
 			}
 			else
 			{
 				result = il2cpp_codegen_get_virtual_invoke_data(method->slot, obj).method;
-				/*if (method->is_inflated)
-				{
-					result = il2cpp_codegen_get_generic_virtual_method(method, obj);
-				}
-				else
-				{
-					result = il2cpp_codegen_get_virtual_invoke_data(method->slot, obj).method;
-				}*/
 			}
-			if (result->genericMethod /* && method->genericMethod*/) // means it's genericInstance method 或generic method
-			{
-				//IL2CPP_ASSERT(method->genericMethod);
-				result = il2cpp::metadata::GenericMetadata::Inflate(GetUnderlyingMethodInfo(result), &result->genericMethod->context);
-			}
+			//if (result->genericMethod /* && method->genericMethod*/) // means it's genericInstance method 或generic method
+			//{
+			//	//IL2CPP_ASSERT(method->genericMethod);
+			//	result = il2cpp::metadata::GenericMetadata::Inflate(GetUnderlyingMethodInfo(result), &result->genericMethod->context);
+			//}
 		}
 		else
 		{
