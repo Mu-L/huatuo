@@ -3554,6 +3554,7 @@ namespace interpreter
 		uint32_t managed2NativeStaticMethod;
 		uint32_t managed2NativeInstanceMethod;
 		uint32_t argIdxs;
+		uint16_t invokeParamCount;
 	};
 
 
@@ -3563,6 +3564,7 @@ namespace interpreter
 		uint32_t managed2NativeInstanceMethod;
 		uint32_t argIdxs;
 		uint16_t ret;
+		uint16_t invokeParamCount;
 	};
 
 

@@ -596,7 +596,7 @@ if (ARR->max_length <= (*(uint32_t*)(localVarBase + __index))) { \
 
 #pragma region function
 
-	inline void CallDelegateMethod(const MethodInfo* method, Il2CppObject* obj, Managed2NativeCallMethod staticM2NMethod, Managed2NativeCallMethod instanceM2NMethod, uint16_t* argIdxs, StackObject* localVarBase, void* ret)
+	inline void CallDelegateMethod(uint16_t invokeParamCount, const MethodInfo* method, Il2CppObject* obj, Managed2NativeCallMethod staticM2NMethod, Managed2NativeCallMethod instanceM2NMethod, uint16_t* argIdxs, StackObject* localVarBase, void* ret)
 	{
 		if (huatuo::metadata::IsInstanceMethod(method))
 		{
@@ -604,17 +604,24 @@ if (ARR->max_length <= (*(uint32_t*)(localVarBase + __index))) { \
 			method = GET_OBJECT_VIRTUAL_METHOD(obj, method);
 			instanceM2NMethod(method, argIdxs, localVarBase, ret);
 		}
-		else
+		else if (invokeParamCount == method->parameters_count)
 		{
 			staticM2NMethod(method, argIdxs + 1, localVarBase, ret);
 		}
+		else
+		{
+			// explicit this
+			IL2CPP_ASSERT(invokeParamCount + 1 == method->parameters_count);
+			(localVarBase + argIdxs[0])->obj = obj;
+			instanceM2NMethod(method, argIdxs, localVarBase, ret);
+		}
 	}
 
-	inline void HiCallDelegate(Il2CppMulticastDelegate* del, Managed2NativeCallMethod staticM2NMethod, Managed2NativeCallMethod instanceM2NMethod, uint16_t* argIdxs, StackObject* localVarBase, void* ret)
+	inline void HiCallDelegate(Il2CppMulticastDelegate* del, uint16_t invokeParamCount, Managed2NativeCallMethod staticM2NMethod, Managed2NativeCallMethod instanceM2NMethod, uint16_t* argIdxs, StackObject* localVarBase, void* ret)
 	{
 		if (del->delegates == nullptr)
 		{
-			CallDelegateMethod(del->delegate.method, del->delegate.target, staticM2NMethod, instanceM2NMethod, argIdxs, localVarBase, ret);
+			CallDelegateMethod(invokeParamCount, del->delegate.method, del->delegate.target, staticM2NMethod, instanceM2NMethod, argIdxs, localVarBase, ret);
 		}
 		else
 		{
@@ -625,7 +632,7 @@ if (ARR->max_length <= (*(uint32_t*)(localVarBase + __index))) { \
 				IL2CPP_ASSERT(subDel);
 				//IL2CPP_ASSERT(subDel->delegate.method->klass->parent == il2cpp_defaults.multicastdelegate_class);
 				IL2CPP_ASSERT(subDel->delegates == nullptr);
-				CallDelegateMethod(subDel->delegate.method, subDel->delegate.target, staticM2NMethod, instanceM2NMethod, argIdxs, localVarBase, ret);
+				CallDelegateMethod(invokeParamCount, subDel->delegate.method, subDel->delegate.target, staticM2NMethod, instanceM2NMethod, argIdxs, localVarBase, ret);
 			}
 		}
 	}
@@ -5006,10 +5013,11 @@ else \
 					uint32_t __managed2NativeStaticMethod = *(uint32_t*)(ip + 2);
 					uint32_t __managed2NativeInstanceMethod = *(uint32_t*)(ip + 6);
 					uint32_t __argIdxs = *(uint32_t*)(ip + 10);
+					uint16_t __invokeParamCount = *(uint16_t*)(ip + 14);
 				    uint16_t* resolvedArgIdxs = ((uint16_t*)&imi->resolveDatas[__argIdxs]);
 				    Il2CppObject* __obj = localVarBase[resolvedArgIdxs[0]].obj;
-				    HiCallDelegate((Il2CppMulticastDelegate*)__obj, ((Managed2NativeCallMethod)imi->resolveDatas[__managed2NativeStaticMethod]), ((Managed2NativeCallMethod)imi->resolveDatas[__managed2NativeInstanceMethod]), resolvedArgIdxs, localVarBase, nullptr);
-				    ip += 14;
+				    HiCallDelegate((Il2CppMulticastDelegate*)__obj, __invokeParamCount, ((Managed2NativeCallMethod)imi->resolveDatas[__managed2NativeStaticMethod]), ((Managed2NativeCallMethod)imi->resolveDatas[__managed2NativeInstanceMethod]), resolvedArgIdxs, localVarBase, nullptr);
+				    ip += 16;
 				    continue;
 				}
 				case HiOpcodeEnum::CallDelegate_ret:
@@ -5018,10 +5026,11 @@ else \
 					uint32_t __managed2NativeInstanceMethod = *(uint32_t*)(ip + 6);
 					uint32_t __argIdxs = *(uint32_t*)(ip + 10);
 					uint16_t __ret = *(uint16_t*)(ip + 14);
+					uint16_t __invokeParamCount = *(uint16_t*)(ip + 16);
 				    uint16_t* resolvedArgIdxs = ((uint16_t*)&imi->resolveDatas[__argIdxs]);
 				    Il2CppObject* __obj = localVarBase[resolvedArgIdxs[0]].obj;
-				    HiCallDelegate((Il2CppMulticastDelegate*)__obj, ((Managed2NativeCallMethod)imi->resolveDatas[__managed2NativeStaticMethod]), ((Managed2NativeCallMethod)imi->resolveDatas[__managed2NativeInstanceMethod]), resolvedArgIdxs, localVarBase, (void*)(localVarBase + __ret));
-				    ip += 16;
+				    HiCallDelegate((Il2CppMulticastDelegate*)__obj, __invokeParamCount, ((Managed2NativeCallMethod)imi->resolveDatas[__managed2NativeStaticMethod]), ((Managed2NativeCallMethod)imi->resolveDatas[__managed2NativeInstanceMethod]), resolvedArgIdxs, localVarBase, (void*)(localVarBase + __ret));
+				    ip += 18;
 				    continue;
 				}
 				case HiOpcodeEnum::NewDelegate:

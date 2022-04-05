@@ -2901,6 +2901,7 @@ ip++;
 						ir->managed2NativeStaticMethod = staticManaged2NativeMethodDataIdx;
 						ir->managed2NativeInstanceMethod = managed2NativeMethodDataIdx;
 						ir->argIdxs = argIdxDataIndex;
+						ir->invokeParamCount = shareMethod->parameters_count;
 					}
 					else
 					{
@@ -2909,6 +2910,7 @@ ip++;
 						ir->managed2NativeInstanceMethod = managed2NativeMethodDataIdx;
 						ir->argIdxs = argIdxDataIndex;
 						ir->ret = retIdx;
+						ir->invokeParamCount = shareMethod->parameters_count;
 					}
 				}
 				continue;
