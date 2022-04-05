@@ -940,7 +940,7 @@ namespace metadata
             {
                 std::string stdStrName = il2cpp::utils::StringUtils::Utf16ToUtf8(enumTypeName->chars);
                 TEMP_FORMAT(errMsg, "ReadCustomAttributeFieldOrPropType enum:'%s' not exists", stdStrName.c_str());
-                RaiseExecuteEngineException(errMsg);
+                RaiseHuatuoExecutionEngineException(errMsg);
             }
             type = *enumType->type;
             break;

@@ -238,6 +238,9 @@ namespace metadata
         *newType = *type;
         return newType;
     }
+
+    Il2CppGenericInst* TryInflateGenericInst(Il2CppGenericInst* inst, const Il2CppGenericContext* genericContext);
+
 #pragma endregion
 
 
@@ -258,11 +261,6 @@ namespace metadata
     inline int32_t GetTypeValueStackObjectCount(const Il2CppType* type)
     {
         return (GetTypeValueSize(type) + 7) / 8;
-    }
-
-    inline void RaiseExecuteEngineException(const char* msg = nullptr)
-    {
-        il2cpp::vm::Exception::Raise(il2cpp::vm::Exception::GetExecutionEngineException(msg));
     }
 
     inline void RaiseBadImageException(const char* msg = nullptr)

@@ -393,7 +393,7 @@ namespace metadata
 			}
 			default:
 			{
-				RaiseExecuteEngineException("not support const TableType");
+				RaiseHuatuoExecutionEngineException("not support const TableType");
 				break;
 			}
 			}
@@ -1041,7 +1041,7 @@ namespace metadata
 		}
 		default:
 		{
-			RaiseExecuteEngineException("GetRuntimeHandleFromToken invaild TableType");
+			RaiseHuatuoExecutionEngineException("GetRuntimeHandleFromToken invaild TableType");
 			return nullptr;
 		}
 		}
@@ -1076,7 +1076,7 @@ namespace metadata
 	}
 
 
-
+	// FIXME 此处bug较多，仍需要仔细检查
 
 	const MethodInfo* GetMethodInfo(const Il2CppType* containerType, const Il2CppMethodDefinition* methodDef, const Il2CppGenericInst* instantiation, const Il2CppGenericContext* genericContext)
 	{
@@ -1157,6 +1157,8 @@ namespace metadata
 			Il2CppGenericInst* genericInstantiation = nullptr;
 			// FIXME! genericInstantiation memory leak
 			MetadataParser::ReadMethodSpecInstantiation(image, methodSpec.instantiation, klassGenericContainer, methodGenericContainer, genericInstantiation);
+			// FIXME memory leak
+			genericInstantiation = TryInflateGenericInst(genericInstantiation, genericContext);
 
 			TableType methodTableType = DecodeMethodDefOrRefCodedIndexTableType(methodSpec.method);
 			uint32_t methodRowIndex = DecodeMethodDefOrRefCodedIndexRowIndex(methodSpec.method);

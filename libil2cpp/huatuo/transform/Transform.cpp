@@ -987,7 +987,7 @@ ip++;
 		}
 		default:
 		{
-			RaiseExecuteEngineException("GetEvalStackReduceDataType invalid type");
+			RaiseHuatuoExecutionEngineException("GetEvalStackReduceDataType invalid type");
 			return EvalStackReduceDataType::Other;
 		}
 		}
@@ -1103,7 +1103,7 @@ ip++;
 		}
 		default:
 		{
-			RaiseExecuteEngineException();
+			RaiseHuatuoExecutionEngineException("not support arg type");
 			return{ LocationDataType::U8, 1 };
 		}
 		}
@@ -2555,7 +2555,7 @@ ip++;
 									}
 									else
 									{
-										RaiseExecuteEngineException("not support System.Threading.Interlocked.CompareExchange");
+										RaiseHuatuoExecutionEngineException("not support System.Threading.Interlocked.CompareExchange");
 									}
 								}
 							}
@@ -2593,7 +2593,7 @@ ip++;
 									}
 									else
 									{
-										RaiseExecuteEngineException("not support System.Threading.Interlocked.Exchange");
+										RaiseHuatuoExecutionEngineException("not support System.Threading.Interlocked.Exchange");
 									}
 								}
 							}
@@ -4009,7 +4009,7 @@ ip++;
 						}
 						else
 						{
-							RaiseExecuteEngineException();
+							RaiseHuatuoExecutionEngineException("not support array ctor");
 						}
 						continue;
 					}
@@ -4536,7 +4536,7 @@ ip++;
 				}
 				default:
 				{
-					RaiseExecuteEngineException("NEWARR invalid reduceType");
+					RaiseHuatuoExecutionEngineException("NEWARR invalid reduceType");
 					break;
 				}
 				}
@@ -4981,7 +4981,7 @@ ip++;
 				}
 				default:
 				{
-					RaiseExecuteEngineException("CKFINITE invalid reduceType");
+					RaiseHuatuoExecutionEngineException("CKFINITE invalid reduceType");
 					break;
 				}
 				}
@@ -5286,7 +5286,7 @@ ip++;
 					}
 					default:
 					{
-						RaiseExecuteEngineException("LOCALLOC invalid reduceType");
+						RaiseHuatuoExecutionEngineException("LOCALLOC invalid reduceType");
 						break;
 					}
 					}
@@ -5402,7 +5402,7 @@ ip++;
 				default:
 				{
 					//UNREACHABLE();
-					RaiseExecuteEngineException();
+					RaiseHuatuoExecutionEngineException("not support instruction");
 					continue;
 				}
 				}
@@ -5415,7 +5415,7 @@ ip++;
 			}
 			default:
 			{
-				RaiseExecuteEngineException();
+				RaiseHuatuoExecutionEngineException("not support instruction");
 				continue;
 			}
 			}

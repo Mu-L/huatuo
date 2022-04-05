@@ -92,7 +92,7 @@ namespace metadata
 		default:
 		{
 			TEMP_FORMAT(errMsg, "GetTypeValueSize unknown type:%d", (int)type->type);
-			RaiseExecuteEngineException(errMsg);
+			RaiseHuatuoExecutionEngineException(errMsg);
 			return -1;
 		}
 		}
@@ -589,6 +589,15 @@ namespace metadata
 			klassGc = gc;
 			methodGc = nullptr;
 		}
+	}
+
+	Il2CppGenericInst* TryInflateGenericInst(Il2CppGenericInst* inst, const Il2CppGenericContext* genericContext)
+	{
+		for (uint32_t i = 0; i < inst->type_argc; i++)
+		{
+			inst->type_argv[i] = TryInflateIfNeed(inst->type_argv[i], genericContext, true);
+		}
+		return inst;
 	}
 }
 }
