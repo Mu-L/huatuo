@@ -1224,40 +1224,49 @@ ip++;
 			if (klass->valuetype)
 			{
 				uint32_t size = il2cpp::vm::Class::GetValueSize(klass, nullptr);
-				if (size <= 8)
+				switch (size)
 				{
-					CI_createClassLdfldAndReturn(i8)
+				case 1:
+				{
+					CI_createClassLdfldAndReturn(u1)
 				}
-				else
+				case 2:
 				{
-					switch (size)
-					{
-					case 12:
-					{
-						CreateIR(ir, LdfldVarVar_size_12);
-						ir->dst = dstIdx;
-						ir->obj = objIdx;
-						ir->offset = offset;
-						return ir;
-					}
-					case 16:
-					{
-						CreateIR(ir, LdfldVarVar_size_16);
-						ir->dst = dstIdx;
-						ir->obj = objIdx;
-						ir->offset = offset;
-						return ir;
-					}
-					default:
-					{
-						CreateIR(ir, LdfldVarVar_n_4);
-						ir->dst = dstIdx;
-						ir->obj = objIdx;
-						ir->offset = offset;
-						ir->size = size;
-						return ir;
-					}
-					}
+					CI_createClassLdfldAndReturn(u2)
+				}
+				case 4:
+				{
+					CI_createClassLdfldAndReturn(u4)
+				}
+				case 8:
+				{
+					CI_createClassLdfldAndReturn(u8)
+				}
+				case 12:
+				{
+					CreateIR(ir, LdfldVarVar_size_12);
+					ir->dst = dstIdx;
+					ir->obj = objIdx;
+					ir->offset = offset;
+					return ir;
+				}
+				case 16:
+				{
+					CreateIR(ir, LdfldVarVar_size_16);
+					ir->dst = dstIdx;
+					ir->obj = objIdx;
+					ir->offset = offset;
+					return ir;
+				}
+				default:
+				{
+					CreateIR(ir, LdfldVarVar_n_4);
+					ir->dst = dstIdx;
+					ir->obj = objIdx;
+					ir->offset = offset;
+					ir->size = size;
+					return ir;
+				}
 				}
 			}
 			else
@@ -1314,40 +1323,49 @@ ip++;
 			if (klass->valuetype)
 			{
 				uint32_t size = il2cpp::vm::Class::GetValueSize(klass, nullptr);
-				if (size <= 8)
+				switch (size)
 				{
-					CI_createValueTypeLdfldAndReturn(i8)
+				case 1:
+				{
+					CI_createValueTypeLdfldAndReturn(u1)
 				}
-				else
+				case 2:
 				{
-					switch (size)
-					{
-					case 12:
-					{
-						CreateIR(ir, LdfldVarVar_size_12);
-						ir->dst = dstIdx;
-						ir->obj = objIdx;
-						ir->offset = offset;
-						return ir;
-					}
-					case 16:
-					{
-						CreateIR(ir, LdfldVarVar_size_16);
-						ir->dst = dstIdx;
-						ir->obj = objIdx;
-						ir->offset = offset;
-						return ir;
-					}
-					default:
-					{
-						CreateIR(ir, LdfldVarVar_n_4);
-						ir->dst = dstIdx;
-						ir->obj = objIdx;
-						ir->offset = offset;
-						ir->size = size;
-						return ir;
-					}
-					}
+					CI_createValueTypeLdfldAndReturn(u2)
+				}
+				case 4:
+				{
+					CI_createValueTypeLdfldAndReturn(u4)
+				}
+				case 8:
+				{
+					CI_createValueTypeLdfldAndReturn(u8)
+				}
+				case 12:
+				{
+					CreateIR(ir, LdfldVarVar_size_12);
+					ir->dst = dstIdx;
+					ir->obj = objIdx;
+					ir->offset = offset;
+					return ir;
+				}
+				case 16:
+				{
+					CreateIR(ir, LdfldVarVar_size_16);
+					ir->dst = dstIdx;
+					ir->obj = objIdx;
+					ir->offset = offset;
+					return ir;
+				}
+				default:
+				{
+					CreateIR(ir, LdfldVarVar_n_4);
+					ir->dst = dstIdx;
+					ir->obj = objIdx;
+					ir->offset = offset;
+					ir->size = size;
+					return ir;
+				}
 				}
 			}
 			else
@@ -1404,40 +1422,49 @@ ip++;
 			if (klass->valuetype)
 			{
 				uint32_t size = il2cpp::vm::Class::GetValueSize(klass, nullptr);
-				if (size <= 8)
+				switch (size)
 				{
-					CI_createStfldAndReturn(i8)
+				case 1:
+				{
+					CI_createStfldAndReturn(u1)
 				}
-				else
+				case 2:
 				{
-					switch (size)
-					{
-					case 12:
-					{
-						CreateIR(ir, StfldVarVar_size_12);
-						ir->obj = objIdx;
-						ir->offset = offset;
-						ir->data = dataIdx;
-						return ir;
-					}
-					case 16:
-					{
-						CreateIR(ir, StfldVarVar_size_16);
-						ir->obj = objIdx;
-						ir->offset = offset;
-						ir->data = dataIdx;
-						return ir;
-					}
-					default:
-					{
-						CreateIR(ir, StfldVarVar_n_4);
-						ir->obj = objIdx;
-						ir->offset = offset;
-						ir->data = dataIdx;
-						ir->size = size;
-						return ir;
-					}
-					}
+					CI_createStfldAndReturn(u2)
+				}
+				case 4:
+				{
+					CI_createStfldAndReturn(u4)
+				}
+				case 8:
+				{
+					CI_createStfldAndReturn(u8)
+				}
+				case 12:
+				{
+					CreateIR(ir, StfldVarVar_size_12);
+					ir->obj = objIdx;
+					ir->offset = offset;
+					ir->data = dataIdx;
+					return ir;
+				}
+				case 16:
+				{
+					CreateIR(ir, StfldVarVar_size_16);
+					ir->obj = objIdx;
+					ir->offset = offset;
+					ir->data = dataIdx;
+					return ir;
+				}
+				default:
+				{
+					CreateIR(ir, StfldVarVar_n_4);
+					ir->obj = objIdx;
+					ir->offset = offset;
+					ir->data = dataIdx;
+					ir->size = size;
+					return ir;
+				}
 				}
 			}
 			else
@@ -1446,7 +1473,6 @@ ip++;
 			}
 		}
 		}
-
 	}
 
 #define CI_createLdsfldAndReturn(type)      { \
@@ -1495,40 +1521,49 @@ ip++;
 			if (klass->valuetype)
 			{
 				uint32_t size = il2cpp::vm::Class::GetValueSize(klass, nullptr);
-				if (size <= 8)
+				switch (size)
 				{
-					CI_createLdsfldAndReturn(i8)
+				case 1:
+				{
+					CI_createLdsfldAndReturn(u1)
 				}
-				else
+				case 2:
 				{
-					switch (size)
-					{
-					case 12:
-					{
-						CreateIR(ir, LdsfldVarVar_size_12);
-						ir->dst = dstIdx;
-						ir->klass = parent;
-						ir->offset = offset;
-						return ir;
-					}
-					case 16:
-					{
-						CreateIR(ir, LdsfldVarVar_size_16);
-						ir->dst = dstIdx;
-						ir->klass = parent;
-						ir->offset = offset;
-						return ir;
-					}
-					default:
-					{
-						CreateIR(ir, LdsfldVarVar_n_4);
-						ir->dst = dstIdx;
-						ir->klass = parent;
-						ir->offset = offset;
-						ir->size = size;
-						return ir;
-					}
-					}
+					CI_createLdsfldAndReturn(u2)
+				}
+				case 4:
+				{
+					CI_createLdsfldAndReturn(u4)
+				}
+				case 8:
+				{
+					CI_createLdsfldAndReturn(u8)
+				}
+				case 12:
+				{
+					CreateIR(ir, LdsfldVarVar_size_12);
+					ir->dst = dstIdx;
+					ir->klass = parent;
+					ir->offset = offset;
+					return ir;
+				}
+				case 16:
+				{
+					CreateIR(ir, LdsfldVarVar_size_16);
+					ir->dst = dstIdx;
+					ir->klass = parent;
+					ir->offset = offset;
+					return ir;
+				}
+				default:
+				{
+					CreateIR(ir, LdsfldVarVar_n_4);
+					ir->dst = dstIdx;
+					ir->klass = parent;
+					ir->offset = offset;
+					ir->size = size;
+					return ir;
+				}
 				}
 			}
 			else
