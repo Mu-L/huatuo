@@ -797,12 +797,16 @@ int32_t exClauseNum = (int32_t)imi->exClauses.size(); \
 for (; frame->nextExClauseIndex < exClauseNum; ) \
 { \
 	InterpExceptionClause* iec = imi->exClauses[frame->nextExClauseIndex++]; \
-	if (frame->leaveTarget < iec->tryBeginOffset) \
+	if (frame->throwOffset < iec->tryBeginOffset) \
 	{ \
 		break; \
 	} \
-	if (frame->leaveTarget < iec->tryEndOffset) \
+	if (frame->throwOffset < iec->tryEndOffset) \
 	{ \
+		if (frame->leaveTarget >= iec->tryBeginOffset && frame->leaveTarget < iec->tryEndOffset) \
+		{ \
+			break; \
+		} \
 		switch (iec->flags) \
 		{ \
 		case CorILExceptionClauseType::Finally: \
@@ -830,6 +834,7 @@ frame->leaveTarget = 0;
 #define RETHROW_EX() { il2cpp::vm::Exception::Raise(curException, const_cast<MethodInfo*>(imi->method)); }
 
 #define LEAVE_EX(target)  { \
+	frame->throwOffset = (int32_t)(ip - ipBase); \
 	frame->leaveTarget = target; \
 	curException = nullptr; \
 	frame->exFlowType = ExceptionFlowType::Leave;\
