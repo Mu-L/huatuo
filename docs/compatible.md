@@ -38,4 +38,30 @@
 
 - map类型需要提前注册 MapField&lt;K&gt;&lt;V&gt;及MapField&lt;K&gt;&lt;V&gt;.Codec。
 
+### SQLite4Unity3d
+
+[github](https://github.com/robertohuertasm/SQLite4Unity3d)
+
+结论：兼容性一般，但常见操作均能正常工作。
+
+- New Database、CreateTable 正常
+- Insert、Get、Delete正常
+- 遍历Table正常
+- 对Table执行Where之类Linq语句无法工作（在mono下就已经无法工作，应该是它自身的bug）
+
 ## MongoDB.Bson
+
+[官方链接](http://mongodb.github.io/mongo-java-driver/3.4/bson/) ，测试使用2.15.0版本
+
+结论：完全兼容
+
+注意事项：
+
+需要在AOT中提前注册的类型较多
+
+- IBsonSerializer&lt;object&gt;
+- EnumSerializer&lt;IntEnum&gt;
+- ArraySerializer&lt;T&gt;
+- EnumerableInterfaceImplementerSerializer&lt;List&lt;T&gt;,T&gt;
+- DictionaryInterfaceImplementerSerializer&lt;Dictionary&lt;K,V&gt;,K,V&gt;
+- 其他需要注册的

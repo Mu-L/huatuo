@@ -50,4 +50,3 @@
 ## 打包时遇到 static_assert(sizeof(il2cpp_array_size_t) == 8, "array size type == 8") 的错误
 
 因为你build了32位程序。 huatuo当前只支持64位。
-
