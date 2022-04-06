@@ -1149,6 +1149,10 @@ namespace metadata
 			MetadataParser::ReadResolveMemberRefFromMemberRef(image, klassGenericContainer, methodGenericContainer, rowIndex, rmr);
 			IL2CPP_ASSERT(rmr.parent.parentType == TableType::TYPEDEF || rmr.parent.parentType == TableType::TYPEREF || rmr.parent.parentType == TableType::TYPESPEC);
 			IL2CPP_ASSERT(rmr.signature.memberType == TableType::METHOD_POINTER);
+			if (genericContext)
+			{
+				rmr.parent.type = *TryInflateIfNeed(&rmr.parent.type, genericContext, true);
+			}
 			return ResolveMethodInfo(&rmr.parent.type, rmr.name, rmr.signature.method, genericInst, genericContext);
 		}
 		case TableType::METHODSPEC:
