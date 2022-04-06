@@ -57,11 +57,33 @@
 
 注意事项：
 
-需要在AOT中提前注册的类型较多
+- 需要在AOT中提前注册的类型较多
+  - IBsonSerializer&lt;object&gt;
+  - EnumSerializer&lt;IntEnum&gt;
+  - ArraySerializer&lt;T&gt;
+  - EnumerableInterfaceImplementerSerializer&lt;List&lt;T&gt;,T&gt;
+  - DictionaryInterfaceImplementerSerializer&lt;Dictionary&lt;K,V&gt;,K,V&gt;
+  - 其他需要注册的
+- Serializer注册。
+  - 不需要在AOT中提前注册，在热更新模块中注册同样可以工作。
+  - 对于值类型的自定义BsonSerializer，如果在热更新部分注册，由于泛型AOT限制，需要从IBsonSerializer&lt;T&gt;实现，而不能从SerializerBase&lt;T&gt;继承。对于class类型则无限制。
 
-- IBsonSerializer&lt;object&gt;
-- EnumSerializer&lt;IntEnum&gt;
-- ArraySerializer&lt;T&gt;
-- EnumerableInterfaceImplementerSerializer&lt;List&lt;T&gt;,T&gt;
-- DictionaryInterfaceImplementerSerializer&lt;Dictionary&lt;K,V&gt;,K,V&gt;
-- 其他需要注册的
+## DOTween
+
+[官方链接](http://dotween.demigiant.com/index.php) 版本 1.2.632
+
+结论：极高的兼容性，只有DOTween.To&lt;&gt;接口有一定的AOT泛型限制问题。
+
+注意事项：
+
+- DOTween.To&lt;&gt; 这个泛型接口由于约束了TPlugOptions泛型参数必须为值类型，导致要求这个参数对应的类型必须为AOT泛型值类型。
+
+## UniTask
+
+[github](https://github.com/Cysharp/UniTask)
+
+结论：兼容性高。限制与普通async完全相同，只需要提前注册相应的aot泛型实例。
+
+注意事项：
+
+由于UniTask支持异步模式的较多，因此要注册的Awaiter类型也较多，需要仔细添加上相应AOT泛型实例化。
