@@ -25,7 +25,7 @@ namespace huatuo
 
     typedef uint8_t byte;
 
-#define TEMP_FORMAT(var, fmt, ...) char var[400]; \
+#define TEMP_FORMAT(var, fmt, ...) char var[600]; \
 	snprintf(var, sizeof(var), fmt, __VA_ARGS__);
 
     void LogPanic(const char* errMsg);
