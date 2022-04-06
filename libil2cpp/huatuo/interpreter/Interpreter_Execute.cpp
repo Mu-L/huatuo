@@ -276,6 +276,7 @@ if (ARR->max_length <= (*(uint32_t*)(localVarBase + __index))) { \
 
 	inline MethodInfo* GET_OBJECT_VIRTUAL_METHOD(Il2CppObject* obj, const MethodInfo* method)
 	{
+		CHECK_NOT_NULL_THROW(obj);
 		const MethodInfo* result;
 		if (huatuo::metadata::IsVirtualMethod(method->flags))
 		{
