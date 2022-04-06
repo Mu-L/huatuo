@@ -11,6 +11,7 @@
 #include "vm/Image.h"
 #include "vm/Exception.h"
 #include "vm/Thread.h"
+#include "vm/Runtime.h"
 #include "metadata/GenericMetadata.h"
 
 #include "Instruction.h"
@@ -288,11 +289,18 @@ if (ARR->max_length <= (*(uint32_t*)(localVarBase + __index))) { \
 			{
 				result = il2cpp_codegen_get_virtual_invoke_data(method->slot, obj).method;
 			}
-			//if (result->genericMethod /* && method->genericMethod*/) // means it's genericInstance method 或generic method
-			//{
-			//	//IL2CPP_ASSERT(method->genericMethod);
-			//	result = il2cpp::metadata::GenericMetadata::Inflate(GetUnderlyingMethodInfo(result), &result->genericMethod->context);
-			//}
+			IL2CPP_ASSERT(!method->genericMethod || method->is_inflated);
+			if (method->genericMethod && method->genericMethod->context.method_inst/* && method->genericMethod*/) // means it's genericInstance method 或generic method
+			{
+				result = il2cpp::vm::Runtime::GetGenericVirtualMethod(result, method);
+				//IL2CPP_ASSERT(method->genericMethod);
+				//const Il2CppGenericContext* genericContext = &method->genericMethod->context;
+				//if (genericContext->method_inst)
+				//{
+				//	Il2CppGenericContext actualGenericContext = { method->genericMethod->context.class_inst, genericContext->method_inst };
+				//	result = il2cpp::metadata::GenericMetadata::Inflate(GetUnderlyingMethodInfo(result), &actualGenericContext);
+				//}
+			}
 		}
 		else
 		{
