@@ -50,3 +50,12 @@
 ## 打包时遇到 static_assert(sizeof(il2cpp_array_size_t) == 8, "array size type == 8") 的错误
 
 因为你build了32位程序。 huatuo当前只支持64位。
+
+## 遇到提示Unity: TypeLoadException: Could not load type 'System.Object' from assembly 'netstandard'.
+
+原因是加载的HotFix.dll 是 .NET Standard 2.0生成的。从根本上解决这个问题可以参照下面步骤：
+
+  1. 确定unity设置了 .NET 4.x
+  2. 删除Library目录
+  3. 拷贝Library\ScriptAssemblies\HotFix.dll 文件到 Assets\StreamingAssets目录
+  4. 重新打包
