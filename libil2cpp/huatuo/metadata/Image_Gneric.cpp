@@ -269,7 +269,15 @@ namespace metadata
 				Il2CppClass* implClass = il2cpp::vm::Class::FromIl2CppType(vmi.type);
 				IL2CPP_ASSERT(implClass != klass);
 				il2cpp::vm::Class::SetupMethods(implClass);
-				return implClass->vtable[vTableSlot].method;
+				for (uint32_t i = 0; i < implClass->method_count; i++)
+				{
+					const MethodInfo* implMethod = implClass->methods[i];
+					if (implMethod->token == vmi.method->token)
+					{
+						return implMethod;
+					}
+				}
+				RaiseHuatuoExecutionEngineException("not find vtable method");
 			}
 		}
 		return nullptr;
