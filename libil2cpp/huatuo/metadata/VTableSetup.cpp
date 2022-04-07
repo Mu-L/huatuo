@@ -345,6 +345,9 @@ namespace metadata
 				uint16_t slotIdx = vm.method->slot;
 				const Il2CppMethodDefinition* overrideAncestorMethod = _parent->_methodImpls[slotIdx].method;
 
+				VirtualMethodImpl& curImpl = _methodImpls[slotIdx];
+				curImpl.type = _type;
+				curImpl.method = vm.method;
 				// search hierarchy methods, find match method. 
 
 				// check override parent virtual methods and
