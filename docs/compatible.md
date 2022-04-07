@@ -87,3 +87,21 @@
 注意事项：
 
 由于UniTask支持异步模式的较多，因此要注册的Awaiter类型也较多，需要仔细添加上相应AOT泛型实例化。
+
+## FairyGUI
+
+[github](https://github.com/fairygui/FairyGUI-unity) 最新版本。
+
+结论：兼容性极佳。
+
+## GameFramework
+
+[github](https://github.com/EllanJiang/GameFramework) 最新版本。
+
+结论：兼容性极佳。
+
+## ET
+
+[github](https://github.com/egametang/ET) 最新版本
+
+结论：兼容性高。 ETask有类似async Task的AOT泛型限制。但如果把ETask全部移到热更新层，则完全无限制。
