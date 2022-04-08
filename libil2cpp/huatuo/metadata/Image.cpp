@@ -260,17 +260,18 @@ namespace metadata
 	{
 		Table& tb = _tables[(int)TableType::PARAM];
 
-		_params.resize(tb.rowNum);
-		for (uint32_t i = 0; i < tb.rowNum; i++)
-		{
-			uint32_t rowIndex = i + 1;
-			Il2CppParameterDefinition& pd = _params[i].paramDef;
-			TbParam data = TableReader::ReadParam(*this, rowIndex);
+		// extra 16 for not name params
+		_params.reserve(tb.rowNum + 16);
+		//for (uint32_t i = 0; i < tb.rowNum; i++)
+		//{
+		//	uint32_t rowIndex = i + 1;
+		//	Il2CppParameterDefinition& pd = _params[i].paramDef;
+		//	TbParam data = TableReader::ReadParam(*this, rowIndex);
 
-			pd.nameIndex = EncodeWithIndex(data.name);
-			pd.token = EncodeToken(TableType::PARAM, rowIndex);
-			// pd.typeIndex 在InitMethodDefs中解析signature后填充。
-		}
+		//	pd.nameIndex = EncodeWithIndex(data.name);
+		//	pd.token = EncodeToken(TableType::PARAM, rowIndex);
+		//	// pd.typeIndex 在InitMethodDefs中解析signature后填充。
+		//}
 	}
 
 
@@ -698,13 +699,29 @@ namespace metadata
 				TbMethod methodData = TableReader::ReadMethod(*this, rawMethodStart + m + 1);
 
 				BlobReader methodSigReader = GetBlobReaderByRawIndex(methodData.signature);
+				uint32_t namedParamStart = md.parameterStart;
+				uint32_t namedParamCount = md.parameterCount;
+
+				uint32_t actualParamStart = (uint32_t)_params.size();
 				MetadataParser::ReadMethodDefSig(
 					methodSigReader,
 					GetGenericContainerByTypeDefinition(&typeDef),
 					GetGenericContainerByRawIndex(DecodeMetadataIndex(md.genericContainerIndex)),
 					md,
-					// 参数为0，但又指向了最后
-					(md.parameterStart == (int32_t)_params.size() ? nullptr : &_params[md.parameterStart]));
+					_params);
+				uint32_t actualParamCount = (uint32_t)_params.size() - actualParamStart;
+				md.parameterStart = actualParamStart;
+				md.parameterCount = actualParamCount;
+				for (uint32_t paramRowIndex = namedParamStart + 1; paramRowIndex <= namedParamStart + namedParamCount; paramRowIndex++)
+				{
+					TbParam data = TableReader::ReadParam(*this, paramRowIndex);
+					ParamDetail& paramDetail = _params[actualParamStart + data.sequence - 1];
+					Il2CppParameterDefinition& pd = paramDetail.paramDef;
+					IL2CPP_ASSERT(paramDetail.parameterIndex == data.sequence - 1);
+					pd.nameIndex = EncodeWithIndex(data.name);
+					pd.token = EncodeToken(TableType::PARAM, paramRowIndex);
+				}
+
 				//for (uint16_t paramIdx = 0; paramIdx < md.parameterCount; paramIdx++)
 				//{
 				//    _params[md.parameterCount + paramIdx].parameterIndex = paramIdx;

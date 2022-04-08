@@ -507,7 +507,7 @@ namespace metadata
         }
     }
 
-    void MetadataParser::ReadMethodDefSig(BlobReader& reader, const Il2CppGenericContainer* klassGenericContainer, const Il2CppGenericContainer* methodGenericContainer, Il2CppMethodDefinition& methodDef, ParamDetail* paramArr)
+    void MetadataParser::ReadMethodDefSig(BlobReader& reader, const Il2CppGenericContainer* klassGenericContainer, const Il2CppGenericContainer* methodGenericContainer, Il2CppMethodDefinition& methodDef, std::vector<ParamDetail>& paramArr)
     {
         Image& image = reader.GetImage();
 
@@ -521,21 +521,22 @@ namespace metadata
             IL2CPP_ASSERT(gc->type_argc == genParamCount);
         }
         uint32_t paramCount = reader.ReadCompressedUint32();
-        IL2CPP_ASSERT(paramCount == methodDef.parameterCount);
+        IL2CPP_ASSERT(paramCount >= methodDef.parameterCount);
 
         Il2CppType returnType = {};
         ReadType(reader, klassGenericContainer, methodGenericContainer, returnType);
         methodDef.returnType = image.AddIl2CppTypeCache(returnType);
 
         int readParamNum = 0;
-        for (ParamDetail* curParam = paramArr; reader.NonEmpty(); ++curParam)
+        for (; reader.NonEmpty(); )
         {
+            ParamDetail curParam = {};
             Il2CppType paramType = {};
             ReadType(reader, klassGenericContainer, methodGenericContainer, paramType);
-            curParam->parameterIndex = readParamNum;
-            curParam->methodDef = &methodDef;
-            curParam->paramDef.typeIndex = image.AddIl2CppTypeCache(paramType);
-            ++readParamNum;
+            curParam.parameterIndex = readParamNum++;
+            curParam.methodDef = &methodDef;
+            curParam.paramDef.typeIndex = image.AddIl2CppTypeCache(paramType);
+            paramArr.push_back(curParam);
         }
         IL2CPP_ASSERT(readParamNum == (int)paramCount);
     }
