@@ -4621,7 +4621,7 @@ ip++;
 				case EvalStackReduceDataType::I4:
 				{
 					CreateAddIR(ir, GetArrayElementAddressCheckAddrVarVar_i4);
-					ir->addr = ir->addr = arr.locOffset;
+					ir->arr = ir->addr = arr.locOffset;
 					ir->index = index.locOffset;
 					ir->eleKlass = eleKlass;
 					break;
@@ -4630,7 +4630,7 @@ ip++;
 				case EvalStackReduceDataType::I8:
 				{
 					CreateAddIR(ir, GetArrayElementAddressCheckAddrVarVar_i8);
-					ir->addr = ir->addr = arr.locOffset;
+					ir->arr = ir->addr = arr.locOffset;
 					ir->index = index.locOffset;
 					ir->eleKlass = eleKlass;
 					break;
