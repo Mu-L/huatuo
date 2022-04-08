@@ -2435,10 +2435,10 @@ ip++;
 				Il2CppClass* klass = shareMethod->klass;
 				const char* klassName = klass->name;
 				const char* methodName = shareMethod->name;
+				uint32_t paramCount = shareMethod->parameters_count;
 #pragma region instrinct
 				if (std::strcmp(klass->namespaze, "System") == 0)
 				{
-					uint32_t paramCount = shareMethod->parameters_count;
 					if (std::strcmp(klassName, "Object") == 0)
 					{
 						// special handle
@@ -2609,36 +2609,86 @@ ip++;
 					{
 						if (strcmp(klassName, "Vector2") == 0)
 						{
-							IL2CPP_ASSERT(evalStackTop >= 3);
-							CreateAddIR(ir, NewVector2VarVarVar);
-							ir->obj = GetEvalStackOffset_3();
-							ir->x = GetEvalStackOffset_2();
-							ir->y = GetEvalStackOffset_1();
-							PopStackN(3);
-							continue;
+							if (paramCount == 3)
+							{
+								IL2CPP_ASSERT(evalStackTop >= 3);
+								CreateAddIR(ir, NewVector2);
+								ir->obj = GetEvalStackOffset_3();
+								ir->x = GetEvalStackOffset_2();
+								ir->y = GetEvalStackOffset_1();
+								PopStackN(3);
+								continue;
+							}
 						}
 						else if (strcmp(klassName, "Vector3") == 0)
 						{
-							IL2CPP_ASSERT(evalStackTop >= 4);
-							CreateAddIR(ir, NewVector3VarVarVarVar);
-							ir->obj = GetEvalStackOffset_4();
-							ir->x = GetEvalStackOffset_3();
-							ir->y = GetEvalStackOffset_2();
-							ir->z = GetEvalStackOffset_1();
-							PopStackN(4);
-							continue;
+							switch (paramCount)
+							{
+							case 2:
+							{
+								IL2CPP_ASSERT(evalStackTop >= 3);
+								CreateAddIR(ir, NewVector3_2);
+								ir->obj = GetEvalStackOffset_3();
+								ir->x = GetEvalStackOffset_2();
+								ir->y = GetEvalStackOffset_1();
+								PopStackN(3);
+								continue;
+							}
+							case 3:
+							{
+								IL2CPP_ASSERT(evalStackTop >= 4);
+								CreateAddIR(ir, NewVector3_3);
+								ir->obj = GetEvalStackOffset_4();
+								ir->x = GetEvalStackOffset_3();
+								ir->y = GetEvalStackOffset_2();
+								ir->z = GetEvalStackOffset_1();
+								PopStackN(4);
+								continue;
+							}
+							default:
+								break;
+							}
 						}
 						else if (strcmp(klassName, "Vector4") == 0)
 						{
-							IL2CPP_ASSERT(evalStackTop >= 5);
-							CreateAddIR(ir, NewVector4VarVarVarVarVar);
-							ir->obj = GetEvalStackOffset_5();
-							ir->x = GetEvalStackOffset_4();
-							ir->y = GetEvalStackOffset_3();
-							ir->z = GetEvalStackOffset_2();
-							ir->w = GetEvalStackOffset_1();
-							PopStackN(5);
-							continue;
+							switch (paramCount)
+							{
+							case 2:
+							{
+								IL2CPP_ASSERT(evalStackTop >= 3);
+								CreateAddIR(ir, NewVector4_2);
+								ir->obj = GetEvalStackOffset_3();
+								ir->x = GetEvalStackOffset_2();
+								ir->y = GetEvalStackOffset_1();
+								PopStackN(3);
+								continue;
+							}
+							case 3:
+							{
+								IL2CPP_ASSERT(evalStackTop >= 4);
+								CreateAddIR(ir, NewVector4_3);
+								ir->obj = GetEvalStackOffset_4();
+								ir->x = GetEvalStackOffset_3();
+								ir->y = GetEvalStackOffset_2();
+								ir->z = GetEvalStackOffset_1();
+								PopStackN(4);
+								continue;
+							}
+							case 4:
+							{
+								IL2CPP_ASSERT(evalStackTop >= 5);
+								CreateAddIR(ir, NewVector4_4);
+								ir->obj = GetEvalStackOffset_5();
+								ir->x = GetEvalStackOffset_4();
+								ir->y = GetEvalStackOffset_3();
+								ir->z = GetEvalStackOffset_2();
+								ir->w = GetEvalStackOffset_1();
+								PopStackN(5);
+								continue;
+							}
+							default:
+								break;
+							}
 						}
 					}
 				}

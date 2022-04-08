@@ -675,9 +675,12 @@ namespace interpreter
 		InterlockedExchangeVarVarVar_i8,
 		InterlockedExchangeVarVarVar_pointer,
 		NewSystemObjectVar,
-		NewVector2VarVarVar,
-		NewVector3VarVarVarVar,
-		NewVector4VarVarVarVarVar,
+		NewVector2,
+		NewVector3_2,
+		NewVector3_3,
+		NewVector4_2,
+		NewVector4_3,
+		NewVector4_4,
 
 		//!!!}}OPCODE
 	};
@@ -5601,7 +5604,7 @@ namespace interpreter
 	};
 
 
-	struct IRNewVector2VarVarVar : IRCommon
+	struct IRNewVector2 : IRCommon
 	{
 		uint16_t obj;
 		uint16_t x;
@@ -5609,7 +5612,15 @@ namespace interpreter
 	};
 
 
-	struct IRNewVector3VarVarVarVar : IRCommon
+	struct IRNewVector3_2 : IRCommon
+	{
+		uint16_t obj;
+		uint16_t x;
+		uint16_t y;
+	};
+
+
+	struct IRNewVector3_3 : IRCommon
 	{
 		uint16_t obj;
 		uint16_t x;
@@ -5618,7 +5629,24 @@ namespace interpreter
 	};
 
 
-	struct IRNewVector4VarVarVarVarVar : IRCommon
+	struct IRNewVector4_2 : IRCommon
+	{
+		uint16_t obj;
+		uint16_t x;
+		uint16_t y;
+	};
+
+
+	struct IRNewVector4_3 : IRCommon
+	{
+		uint16_t obj;
+		uint16_t x;
+		uint16_t y;
+		uint16_t z;
+	};
+
+
+	struct IRNewVector4_4 : IRCommon
 	{
 		uint16_t obj;
 		uint16_t x;
