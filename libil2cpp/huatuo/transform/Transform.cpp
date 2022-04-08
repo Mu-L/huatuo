@@ -42,6 +42,7 @@ namespace transform
 #define CreateAddIR(varName, typeName) IR##typeName* varName = pool.AllocIR<IR##typeName>(); varName->type = HiOpcodeEnum::typeName; curbb->insts.push_back(varName);
 #define PushStackByType(type) { int32_t byteSize = GetTypeValueSize(type); int32_t stackSize = GetStackSizeByByteSize(byteSize); evalStack[evalStackTop].reduceType = GetEvalStackReduceDataType(type); evalStack[evalStackTop].byteSize = byteSize; evalStack[evalStackTop].locOffset = GetEvalStackNewTopOffset(); evalStackTop++; curStackSize += stackSize; maxStackSize = std::max(curStackSize, maxStackSize); IL2CPP_ASSERT(maxStackSize < MAX_STACK_SIZE); }
 #define PushStackByReduceType(t) { int32_t byteSize = GetSizeByReduceType(t); int32_t stackSize = GetStackSizeByByteSize(byteSize); evalStack[evalStackTop].reduceType = t; evalStack[evalStackTop].byteSize = byteSize; evalStack[evalStackTop].locOffset = GetEvalStackNewTopOffset(); evalStackTop++; curStackSize += stackSize; maxStackSize = std::max(curStackSize, maxStackSize); IL2CPP_ASSERT(maxStackSize < MAX_STACK_SIZE); }
+#define DuplicateStack() { IL2CPP_ASSERT(evalStackTop > 0);  EvalStackVarInfo& oldTop = evalStack[evalStackTop - 1]; EvalStackVarInfo& newTop = evalStack[evalStackTop++]; newTop.reduceType = oldTop.reduceType; newTop.byteSize = oldTop.byteSize; newTop.locOffset = curStackSize; curStackSize += oldTop.byteSize; maxStackSize = std::max(curStackSize, maxStackSize); IL2CPP_ASSERT(maxStackSize < MAX_STACK_SIZE);}
 
 #define InsertMemoryBarrier() { if (prefixFlags & (int32_t)PrefixFlags::Volatile) { CreateAddIR(_mb, MemoryBarrier); } }
 #define ResetPrefixFlags() do { prefixFlags = 0; } while(0)
@@ -2401,7 +2402,7 @@ ip++;
 				IRCommon* ir = CreateAssignVarVar(pool, GetEvalStackNewTopOffset(), __eval.locOffset, __eval.byteSize);
 				AddInst(ir);
 
-				PushStackByReduceType(__eval.reduceType);
+				DuplicateStack();
 				ip++;
 				continue;
 			}
